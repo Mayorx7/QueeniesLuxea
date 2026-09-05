@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   QueenLuxea design tokens
+   Palette: black & white dominant, Champagne Gold accent
+--------------------------------------------------------------- */
+@theme {
+  --font-display: "Fraunces", "Iowan Old Style", serif;
+  --font-sans: "Karla", "Helvetica Neue", Arial, sans-serif;
+
+  /* ── Neutrals — clean, editorial black & white ── */
+  --color-ivory: #FAFAFA;            /* main background — pure near-white       */
+  --color-cream: #F3F3F1;            /* subtle surface tint — neutral off-white  */
+  --color-ink: #0C0C0C;              /* headings / dark sections — near-black    */
+  --color-espresso: #1C1C1C;         /* body text — near-black                  */
+  --color-espresso-light: #5A5A5A;   /* secondary / muted text — neutral grey   */
+  --color-line: #E3E3E3;             /* borders / dividers — clean neutral grey  */
+
+  /* ── ONE accent: Champagne Gold ── */
+  --color-gold: #C6A15B;             /* primary accent — Champagne Gold          */
+  --color-gold-light: #D9BC86;       /* lighter accent — soft Champagne Gold     */
+
+  /* ── Legacy tokens aliased to gold family (backward compat) ── */
+  --color-champagne: #C6A15B;        /* → same as gold                          */
+  --color-champagne-light: #EAD9B5;  /* → very light gold tint                  */
+
+  --tracking-wider-plus: 0.16em;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  body {
+    background-color: var(--color-ivory);
+    color: var(--color-espresso);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    color: var(--color-ink);
+    letter-spacing: -0.01em;
+  }
+
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+  }
+}
+
+@layer utilities {
+  /* Mobile nav safe area — prevents content from being hidden behind fixed bottom nav */
+  .mobile-nav-safe {
+    padding-bottom: 5rem;
+  }
+  @media (min-width: 768px) {
+    .mobile-nav-safe {
+      padding-bottom: 0;
+    }
+  }
+
+  /* Horizontal scroll snap for product/category strips */
+  .snap-x-mandatory {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .snap-start {
+    scroll-snap-align: start;
+  }
+
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.72rem;
+    letter-spacing: var(--tracking-wider-plus);
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+
+  .link-underline {
+    position: relative;
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    transition: background-size 0.35s ease;
+  }
+  .link-underline:hover,
+  .link-underline:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  .crest {
+    display: inline-block;
+    position: relative;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.7s ease both;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide-in-up {
+    animation: slideInUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  @keyframes slideInUp {
+    from { opacity: 0; transform: translateY(100%); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hairline {
+    height: 1px;
+    background-color: var(--color-line);
+  }
+
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
