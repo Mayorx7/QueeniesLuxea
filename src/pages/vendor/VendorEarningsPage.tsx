@@ -1,25 +1,58 @@
-import { Wallet, Download, History } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Wallet, Download, History, RefreshCw } from "lucide-react";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
 import VendorEarningsCard from "../../components/vendor/VendorEarningsCard";
 
-const PAYOUTS = [
-  { id: "PAY-9382", date: "Sep 1, 2026", amount: 450000, status: "Completed", account: "GTBank **** 1234" },
-  { id: "PAY-9301", date: "Aug 15, 2026", amount: 620000, status: "Completed", account: "GTBank **** 1234" },
-  { id: "PAY-9244", date: "Aug 1, 2026", amount: 380000, status: "Completed", account: "GTBank **** 1234" },
-];
-
-const TRANSACTIONS = [
-  { id: "TRX-7291", orderId: "ORD-7291", date: "Sep 3, 2026", type: "Sale", amount: 125000, fee: 6250 },
-  { id: "TRX-7290", orderId: "ORD-7290", date: "Sep 3, 2026", type: "Sale", amount: 170000, fee: 8500 },
-  { id: "TRX-7288", orderId: "ORD-7288", date: "Sep 2, 2026", type: "Sale", amount: 65000, fee: 3250 },
-  { id: "TRX-7285", orderId: "ORD-7285", date: "Sep 1, 2026", type: "Sale", amount: 145000, fee: 7250 },
-  { id: "TRX-7282", orderId: "ORD-7282", date: "Aug 30, 2026", type: "Refund", amount: -125000, fee: -6250 },
-];
-
-function formatNaira(v: number) {
-  return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(v);
+interface Transaction {
+  id: string;
+  orderId: string;
+  date: string;
+  type: string;
+  amount: number;
+  fee: number;
 }
 
 export default function VendorEarningsPage() {
+  const { user } = useAuth();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTransactions() {
+      if (!supabase || !user) return;
+      try {
+        const { data, error } = await supabase
+          .from("order_items")
+          .select("id, order_id, total_price, created_at, orders(order_number)")
+          .eq("vendor_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        const mapped: Transaction[] = (data ?? []).map((row) => ({
+          id: row.id.slice(0, 8),
+          orderId: (row.orders as any)?.order_number ?? row.order_id.slice(0, 8),
+          date: new Date(row.created_at).toLocaleDateString(),
+          type: "Sale",
+          amount: row.total_price,
+          fee: row.total_price * 0.05, // 5% fee
+        }));
+
+        setTransactions(mapped);
+      } catch (err) {
+        console.error("Failed to load transactions", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchTransactions();
+  }, [user]);
+
+  function formatNaira(v: number) {
+    return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(v);
+  }
+
   return (
     <div className="space-y-6 pb-10">
       <div>
@@ -52,19 +85,11 @@ export default function VendorEarningsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-line flex-1 sm:flex-none flex flex-col sm:table-row-group">
-                {PAYOUTS.map((p) => (
-                  <tr key={p.id} className="flex flex-col sm:table-row p-4 sm:p-0">
-                    <td className="py-1 sm:py-3.5 sm:pl-4 font-medium text-ink">{p.id}</td>
-                    <td className="py-1 sm:py-3.5 sm:px-4 text-espresso-light text-xs sm:text-sm">{p.date}</td>
-                    <td className="py-1 sm:py-3.5 sm:px-4 text-espresso-light text-xs sm:text-sm">{p.account}</td>
-                    <td className="py-1 sm:py-3.5 sm:px-4 font-medium text-ink">{formatNaira(p.amount)}</td>
-                    <td className="py-2 sm:py-3.5 sm:pr-4 text-left sm:text-right">
-                      <span className="inline-flex items-center rounded-md bg-emerald-50 px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-wide text-emerald-700">
-                        {p.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                <tr className="flex sm:table-row">
+                  <td colSpan={5} className="py-10 text-center text-espresso-light text-sm w-full">
+                    No payouts yet. Your earnings will appear here once processed.
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -97,40 +122,54 @@ export default function VendorEarningsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-line flex-1 sm:flex-none flex flex-col sm:table-row-group">
-              {TRANSACTIONS.map((t) => (
-                <tr key={t.id} className="flex flex-col sm:table-row hover:bg-cream/30 transition-colors p-5 sm:p-0">
-                  <td className="py-2 sm:py-3.5 sm:pl-6 font-medium text-ink flex justify-between sm:table-cell">
-                    <span className="sm:hidden text-espresso-light">TRX ID:</span>
-                    {t.id}
-                  </td>
-                  <td className="py-2 sm:py-3.5 sm:px-4 text-espresso-light flex justify-between sm:table-cell">
-                    <span className="sm:hidden text-espresso-light">Order ID:</span>
-                    <a href="#" className="hover:underline">{t.orderId}</a>
-                  </td>
-                  <td className="py-2 sm:py-3.5 sm:px-4 text-espresso-light flex justify-between sm:table-cell">
-                    <span className="sm:hidden text-espresso-light">Date:</span>
-                    {t.date}
-                  </td>
-                  <td className="py-2 sm:py-3.5 sm:px-4 flex justify-between sm:table-cell items-center">
-                    <span className="sm:hidden text-espresso-light">Type:</span>
-                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-wide ${t.type === 'Sale' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
-                      {t.type}
-                    </span>
-                  </td>
-                  <td className={`py-2 sm:py-3.5 sm:px-4 font-medium flex justify-between sm:table-cell ${t.amount < 0 ? 'text-red-600' : 'text-ink'}`}>
-                    <span className="sm:hidden text-espresso-light">Amount:</span>
-                    {formatNaira(t.amount)}
-                  </td>
-                  <td className={`py-2 sm:py-3.5 sm:px-4 font-medium flex justify-between sm:table-cell ${t.fee < 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    <span className="sm:hidden text-espresso-light">Fee:</span>
-                    {t.fee > 0 ? '-' : '+'}{formatNaira(Math.abs(t.fee))}
-                  </td>
-                  <td className="py-3 sm:py-3.5 sm:pr-6 font-semibold text-ink text-left sm:text-right border-t border-line sm:border-0 mt-3 sm:mt-0 pt-4 sm:pt-0 flex justify-between sm:table-cell">
-                    <span className="sm:hidden text-espresso-light">Net:</span>
-                    {formatNaira(t.amount - t.fee)}
+              {loading ? (
+                <tr className="flex sm:table-row p-5 sm:p-0">
+                  <td colSpan={7} className="py-10 text-center text-espresso-light text-sm w-full">
+                    Loading transactions...
                   </td>
                 </tr>
-              ))}
+              ) : transactions.length === 0 ? (
+                <tr className="flex sm:table-row p-5 sm:p-0">
+                  <td colSpan={7} className="py-10 text-center text-espresso-light text-sm w-full">
+                    No transactions yet.
+                  </td>
+                </tr>
+              ) : (
+                transactions.map((t) => (
+                  <tr key={t.id} className="flex flex-col sm:table-row hover:bg-cream/30 transition-colors p-5 sm:p-0">
+                    <td className="py-2 sm:py-3.5 sm:pl-6 font-medium text-ink flex justify-between sm:table-cell uppercase">
+                      <span className="sm:hidden text-espresso-light">TRX ID:</span>
+                      {t.id}
+                    </td>
+                    <td className="py-2 sm:py-3.5 sm:px-4 text-espresso-light flex justify-between sm:table-cell uppercase">
+                      <span className="sm:hidden text-espresso-light">Order ID:</span>
+                      {t.orderId}
+                    </td>
+                    <td className="py-2 sm:py-3.5 sm:px-4 text-espresso-light flex justify-between sm:table-cell">
+                      <span className="sm:hidden text-espresso-light">Date:</span>
+                      {t.date}
+                    </td>
+                    <td className="py-2 sm:py-3.5 sm:px-4 flex justify-between sm:table-cell items-center">
+                      <span className="sm:hidden text-espresso-light">Type:</span>
+                      <span className={`inline-flex items-center rounded-md px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-wide ${t.type === 'Sale' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+                        {t.type}
+                      </span>
+                    </td>
+                    <td className={`py-2 sm:py-3.5 sm:px-4 font-medium flex justify-between sm:table-cell ${t.amount < 0 ? 'text-red-600' : 'text-ink'}`}>
+                      <span className="sm:hidden text-espresso-light">Amount:</span>
+                      {formatNaira(t.amount)}
+                    </td>
+                    <td className={`py-2 sm:py-3.5 sm:px-4 font-medium flex justify-between sm:table-cell ${t.fee < 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      <span className="sm:hidden text-espresso-light">Fee:</span>
+                      {t.fee > 0 ? '-' : '+'}{formatNaira(Math.abs(t.fee))}
+                    </td>
+                    <td className="py-3 sm:py-3.5 sm:pr-6 font-semibold text-ink text-left sm:text-right border-t border-line sm:border-0 mt-3 sm:mt-0 pt-4 sm:pt-0 flex justify-between sm:table-cell">
+                      <span className="sm:hidden text-espresso-light">Net:</span>
+                      {formatNaira(t.amount - t.fee)}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

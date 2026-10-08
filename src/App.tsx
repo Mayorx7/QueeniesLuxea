@@ -3,6 +3,8 @@ import Layout from "./components/Layout";
 import { ToastProvider } from "./context/ToastContext";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
+import { AuthProvider } from "./context/AuthContext";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import ShopPage from "./pages/ShopPage";
 import CategoryPage from "./pages/CategoryPage";
@@ -25,6 +27,8 @@ import CookiePolicyPage from "./pages/CookiePolicyPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import AuthCallbackPage from "./pages/AuthCallbackPage";
 import OrdersPage from "./pages/OrdersPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
 import AddressesPage from "./pages/AddressesPage";
@@ -62,6 +66,7 @@ import VendorProfilePage from "./pages/vendor/VendorProfilePage";
 export default function App() {
   return (
     <BrowserRouter>
+      <AuthProvider>
       <ToastProvider>
         <CartProvider>
           <WishlistProvider>
@@ -94,10 +99,13 @@ export default function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/auth/callback" element={<AuthCallbackPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
 
               {/* Customer Dashboard Layout */}
+              <Route element={<ProtectedRoute roles={["customer"]} />}>
               <Route path="/account" element={<CustomerDashboardLayout />}>
                 <Route index element={<CustomerDashboard />} />
                 <Route path="orders" element={<OrdersPage />} />
@@ -107,8 +115,10 @@ export default function App() {
                 <Route path="settings" element={<SettingsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
+              </Route>
 
               {/* Admin Dashboard Layout */}
+              <Route element={<ProtectedRoute roles={["admin"]} />}>
               <Route path="/admin" element={<AdminDashboardLayout />}>
                 <Route index element={<AdminOverview />} />
                 <Route path="orders" element={<AdminOrdersPage />} />
@@ -119,12 +129,15 @@ export default function App() {
                 <Route path="settings" element={<AdminSettingsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
+              </Route>
 
               {/* Vendor Dashboard Layout */}
+              <Route element={<ProtectedRoute roles={["vendor"]} />}>
               <Route path="/vendor" element={<VendorDashboardLayout />}>
                 <Route index element={<VendorOverview />} />
                 <Route path="products" element={<VendorProductsPage />} />
                 <Route path="products/add" element={<VendorAddProductPage />} />
+                <Route path="products/:id/edit" element={<VendorAddProductPage />} />
                 <Route path="orders" element={<VendorOrdersPage />} />
                 <Route path="customers" element={<VendorCustomersPage />} />
                 <Route path="inventory" element={<VendorInventoryPage />} />
@@ -134,10 +147,12 @@ export default function App() {
                 <Route path="profile" element={<VendorProfilePage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
+              </Route>
             </Routes>
           </WishlistProvider>
         </CartProvider>
       </ToastProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Bell, Lock, Shield, Trash2, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { supabase } from "../lib/supabase";
 
 type NotifKey = "orderUpdates" | "promotions" | "newArrivals" | "wishlistAlerts";
 
@@ -33,6 +34,7 @@ export default function SettingsPage() {
   const [showPasswords, setShowPasswords] = useState({ current: false, next: false, confirm: false });
   const [passwordSaved, setPasswordSaved] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const toggleNotif = (key: NotifKey) => {
@@ -45,8 +47,10 @@ export default function SettingsPage() {
     setPasswordForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!supabase) return;
+    
     if (passwordForm.next !== passwordForm.confirm) {
       setPasswordError("New passwords do not match.");
       return;
@@ -55,8 +59,23 @@ export default function SettingsPage() {
       setPasswordError("Password must be at least 8 characters.");
       return;
     }
-    setPasswordSaved(true);
-    setPasswordForm({ current: "", next: "", confirm: "" });
+    
+    setSavingPassword(true);
+    setPasswordError("");
+    setPasswordSaved(false);
+    
+    const { error } = await supabase.auth.updateUser({
+      password: passwordForm.next,
+    });
+    
+    setSavingPassword(false);
+    
+    if (error) {
+      setPasswordError(error.message);
+    } else {
+      setPasswordSaved(true);
+      setPasswordForm({ current: "", next: "", confirm: "" });
+    }
   };
 
   const toggleShow = (field: keyof typeof showPasswords) => {
@@ -155,9 +174,10 @@ export default function SettingsPage() {
           <div className="flex items-center gap-4 pt-2">
             <button
               type="submit"
-              className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-semibold text-ivory transition-all hover:bg-espresso hover:scale-[1.02]"
+              disabled={savingPassword}
+              className="inline-flex items-center gap-2 rounded-full bg-ink px-6 py-3 text-sm font-semibold text-ivory transition-all hover:bg-espresso hover:scale-[1.02] disabled:opacity-60 disabled:hover:scale-100"
             >
-              Update Password
+              {savingPassword ? "Updating..." : "Update Password"}
             </button>
             {passwordSaved && (
               <span className="flex items-center gap-1.5 text-sm text-emerald-700">

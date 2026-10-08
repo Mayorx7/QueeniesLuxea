@@ -8,13 +8,13 @@ import MobileSearchBar from "../components/MobileSearchBar";
 import MobilePromoBanner from "../components/MobilePromoBanner";
 import MobileCategoryScroll from "../components/MobileCategoryScroll";
 import NewsletterForm from "../components/NewsletterForm";
-import { CATEGORIES, PRODUCTS } from "../data/products";
+import { CATEGORIES } from "../data/products";
+import { useProductListing } from "../hooks/useProductListing";
 import { img } from "../utils/image";
-
 export default function HomePage() {
-  const newArrivals = PRODUCTS.filter((p) => p.isNew).slice(0, 8);
-  const featured = PRODUCTS.filter((p) => p.isFeatured).slice(0, 8);
-  const bestSellers = PRODUCTS.filter((p) => p.rating >= 4.7).slice(0, 6);
+  const { products } = useProductListing();  const newArrivals = products.filter((p) => p.isNew).slice(0, 8);
+  const featured = products.filter((p) => p.isFeatured).slice(0, 8);
+  const bestSellers = products.filter((p) => p.rating >= 4.7).slice(0, 6);
 
   return (
     <div>

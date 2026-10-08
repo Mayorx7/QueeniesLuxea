@@ -6,6 +6,7 @@ import SearchOverlay from "./SearchOverlay";
 import MiniCart from "./MiniCart";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useAuth } from "../context/AuthContext";
 
 const NAV_LINKS = [
   { label: "New Arrivals", to: "/shop?filter=new" },
@@ -22,6 +23,7 @@ export default function Header() {
   const [cartOpen, setCartOpen] = useState(false);
   const { itemCount } = useCart();
   const { count: wishlistCount } = useWishlist();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -89,14 +91,35 @@ export default function Header() {
             <Search size={19} />
           </button>
 
-          {/* Account — desktop only (mobile: in bottom nav) */}
-          <Link
-            to="/account"
-            aria-label="Account"
-            className="hidden min-h-[44px] min-w-[44px] items-center justify-center text-[var(--color-espresso)] hover:text-[var(--color-gold)] transition-colors md:flex"
-          >
-            <User size={19} />
-          </Link>
+          {/* Account / Login & Register — desktop only (mobile: in bottom nav) */}
+          {!loading && user ? (
+            <Link
+              to="/account"
+              aria-label="Account"
+              className="hidden min-h-[44px] min-w-[44px] items-center justify-center text-[var(--color-espresso)] hover:text-[var(--color-gold)] transition-colors md:flex"
+            >
+              <User size={19} />
+            </Link>
+          ) : !loading && !user ? (
+            <div className="hidden items-center gap-3 md:flex">
+              <Link
+                to="/login"
+                id="header-login-btn"
+                className="eyebrow link-underline text-[0.72rem] text-[var(--color-espresso)] hover:text-[var(--color-gold)] transition-all duration-200 hover:scale-105 inline-block"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
+                id="header-register-btn"
+                className="eyebrow text-[0.72rem] text-[var(--color-ivory)] bg-[var(--color-ink)] px-3 py-1.5 rounded-full transition-all duration-200 hover:bg-[var(--color-espresso)] hover:scale-105 hover:shadow-md active:scale-95"
+              >
+                Register
+              </Link>
+            </div>
+          ) : (
+            <div className="hidden min-h-[44px] min-w-[44px] md:flex" />
+          )}
 
           {/* Wishlist — desktop only (mobile: in bottom nav) */}
           <Link

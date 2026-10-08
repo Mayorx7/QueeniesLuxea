@@ -1,26 +1,105 @@
-import { useState } from "react";
-import { Search, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Search, AlertTriangle, CheckCircle2, RefreshCw, Save } from "lucide-react";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
 
-const INVENTORY = [
-  { id: "INV-1", name: "Linen Summer Blazer", sku: "BLZ-LIN-01", stock: 0, status: "Out of Stock" },
-  { id: "INV-2", name: "Velvet Wrap Coat", sku: "COT-VEL-02", stock: 0, status: "Out of Stock" },
-  { id: "INV-3", name: "Pleated Midi Skirt", sku: "SKT-PLT-01", stock: 2, status: "Low Stock" },
-  { id: "INV-4", name: "Silk Evening Gown", sku: "GWN-SLK-01", stock: 15, status: "In Stock" },
-  { id: "INV-5", name: "Satin Evening Trousers", sku: "TRS-SAT-03", stock: 12, status: "In Stock" },
-  { id: "INV-6", name: "Classic Cotton Shirt", sku: "SHT-COT-05", stock: 32, status: "In Stock" },
-];
+interface VariantRow {
+  id: string;
+  product_id: string;
+  name: string;
+  sku: string;
+  color: string | null;
+  size: string | null;
+  stock: number;
+}
 
 export default function VendorInventoryPage() {
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
-  // In a real app, this would be complex state management. For now, simple mock state.
-  const [quantities, setQuantities] = useState<Record<string, number>>(
-    INVENTORY.reduce((acc, item) => ({ ...acc, [item.id]: item.stock }), {})
-  );
+  
+  const [variants, setVariants] = useState<VariantRow[]>([]);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  const filtered = INVENTORY.filter(item => 
-    item.name.toLowerCase().includes(search.toLowerCase()) || 
-    item.sku.toLowerCase().includes(search.toLowerCase())
-  );
+  const fetchInventory = async () => {
+    if (!supabase || !user) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: err } = await supabase
+        .from("product_variants")
+        .select(`
+          id, product_id, sku, stock, color, size,
+          products!inner ( name, vendor_id )
+        `)
+        .eq("products.vendor_id", user.id);
+
+      if (err) throw err;
+
+      const mapped: VariantRow[] = (data ?? []).map(row => ({
+        id: row.id,
+        product_id: row.product_id,
+        name: (row.products as any).name,
+        sku: row.sku || "N/A",
+        color: row.color,
+        size: row.size,
+        stock: row.stock,
+      }));
+
+      setVariants(mapped);
+      setQuantities(mapped.reduce((acc, item) => ({ ...acc, [item.id]: item.stock }), {}));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load inventory.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInventory();
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!supabase) return;
+    setSaving(true);
+    setError(null);
+    setSaveSuccess(false);
+    try {
+      const updates = Object.entries(quantities)
+        .filter(([id, qty]) => {
+          const original = variants.find(v => v.id === id);
+          return original && original.stock !== qty;
+        })
+        .map(([id, qty]) => ({ id, stock: qty }));
+
+      if (updates.length === 0) {
+        setSaving(false);
+        return;
+      }
+
+      const { error: updateErr } = await supabase.from("product_variants").upsert(updates);
+      if (updateErr) throw updateErr;
+
+      setVariants(prev => prev.map(v => ({ ...v, stock: quantities[v.id] ?? v.stock })));
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to save inventory.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
+  const filtered = useMemo(() => variants.filter(item => {
+    const term = search.toLowerCase();
+    const fullName = `${item.name} ${item.color || ''} ${item.size || ''}`.toLowerCase();
+    return fullName.includes(term) || item.sku.toLowerCase().includes(term);
+  }), [variants, search]);
+
 
   const getStatusDisplay = (stock: number) => {
     if (stock === 0) return { label: "Out of Stock", color: "text-red-600 bg-red-50", icon: AlertTriangle };
@@ -52,9 +131,24 @@ export default function VendorInventoryPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+          <div className="flex items-center gap-2"><AlertTriangle size={16} /><span>{error}</span></div>
+          <button onClick={fetchInventory} className="flex items-center gap-1.5 font-semibold hover:text-red-900">
+            <RefreshCw size={14} /> Retry
+          </button>
+        </div>
+      )}
+
+      {saveSuccess && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-3 text-sm text-emerald-700">
+          Inventory saved successfully!
+        </div>
+      )}
+
       <div className="rounded-xl border border-line bg-ivory overflow-hidden">
         <div className="border-b border-line p-5">
-          <div className="relative max-w-sm">
+          <div className="flex-1 relative max-w-sm">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-espresso-light" />
             <input 
               type="text" 
@@ -64,6 +158,14 @@ export default function VendorInventoryPage() {
               className="w-full rounded-lg border border-line bg-cream/30 py-2.5 pl-9 pr-4 text-sm text-ink outline-none transition-colors focus:border-champagne"
             />
           </div>
+          <button 
+            onClick={handleSave} 
+            disabled={saving}
+            className="flex items-center gap-2 rounded-lg bg-ink px-4 py-2.5 text-sm font-medium text-ivory transition-colors hover:bg-espresso disabled:opacity-50"
+          >
+            {saving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
+            Save Changes
+          </button>
         </div>
 
         <div className="overflow-x-auto">
@@ -78,59 +180,76 @@ export default function VendorInventoryPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-line flex-1 sm:flex-none flex flex-col sm:table-row-group">
-              {filtered.map((item) => {
-                const currentQty = quantities[item.id];
-                const status = getStatusDisplay(currentQty);
-                const Icon = status.icon;
-                
-                return (
-                  <tr key={item.id} className="flex flex-col sm:table-row hover:bg-cream/30 transition-colors p-5 sm:p-0">
-                    <td className="py-3 sm:py-4 sm:pl-6 font-medium text-ink">{item.name}</td>
-                    <td className="py-1 sm:py-4 sm:px-4 text-espresso-light flex justify-between sm:table-cell">
-                      <span className="sm:hidden text-espresso-light">SKU:</span>
-                      {item.sku}
-                    </td>
-                    <td className="py-2 sm:py-4 sm:px-4 flex justify-between sm:table-cell items-center">
-                      <span className="sm:hidden text-espresso-light">Status:</span>
-                      <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide ${status.color}`}>
-                        <Icon size={12} strokeWidth={2.5} />
-                        {status.label}
-                      </span>
-                    </td>
-                    <td className="py-2 sm:py-4 sm:px-4 flex justify-between sm:table-cell">
-                      <span className="sm:hidden text-espresso-light">Available:</span>
-                      <span className={`font-medium ${currentQty === 0 ? 'text-red-500' : 'text-ink'}`}>
-                        {currentQty}
-                      </span>
-                    </td>
-                    <td className="py-3 sm:py-4 sm:pr-6 text-left sm:text-right border-t border-line sm:border-0 mt-3 sm:mt-0 pt-4 sm:pt-0">
-                      <div className="flex items-center justify-between sm:justify-end gap-2">
-                        <span className="sm:hidden text-espresso-light">Update:</span>
-                        <div className="flex items-center gap-1 bg-cream/30 border border-line rounded-lg p-1">
-                          <button 
-                            onClick={() => setQuantities(prev => ({...prev, [item.id]: Math.max(0, prev[item.id] - 1)}))}
-                            className="w-7 h-7 rounded bg-ivory text-ink border border-line flex items-center justify-center hover:bg-cream hover:border-champagne"
-                          >
-                            -
-                          </button>
-                          <input 
-                            type="number"
-                            value={currentQty}
-                            onChange={(e) => setQuantities(prev => ({...prev, [item.id]: Math.max(0, parseInt(e.target.value) || 0)}))}
-                            className="w-12 h-7 bg-transparent text-center text-sm outline-none text-ink font-medium"
-                          />
-                          <button 
-                            onClick={() => setQuantities(prev => ({...prev, [item.id]: prev[item.id] + 1}))}
-                            className="w-7 h-7 rounded bg-ivory text-ink border border-line flex items-center justify-center hover:bg-cream hover:border-champagne"
-                          >
-                            +
-                          </button>
+              {loading ? (
+                <tr className="flex sm:table-row">
+                  <td colSpan={5} className="py-10 text-center text-espresso-light w-full">Loading inventory...</td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr className="flex sm:table-row">
+                  <td colSpan={5} className="py-10 text-center text-espresso-light w-full">No products found.</td>
+                </tr>
+              ) : (
+                filtered.map((item) => {
+                  const currentQty = quantities[item.id] ?? 0;
+                  const status = getStatusDisplay(currentQty);
+                  const Icon = status.icon;
+                  
+                  return (
+                    <tr key={item.id} className="flex flex-col sm:table-row hover:bg-cream/30 transition-colors p-5 sm:p-0">
+                      <td className="py-3 sm:py-4 sm:pl-6 font-medium text-ink">
+                        <div>
+                          {item.name}
+                          <div className="text-xs text-espresso-light mt-0.5">
+                            {[item.color, item.size].filter(Boolean).join(" · ")}
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td className="py-1 sm:py-4 sm:px-4 text-espresso-light flex justify-between sm:table-cell">
+                        <span className="sm:hidden text-espresso-light">SKU:</span>
+                        {item.sku}
+                      </td>
+                      <td className="py-2 sm:py-4 sm:px-4 flex justify-between sm:table-cell items-center">
+                        <span className="sm:hidden text-espresso-light">Status:</span>
+                        <span className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-wide ${status.color}`}>
+                          <Icon size={12} strokeWidth={2.5} />
+                          {status.label}
+                        </span>
+                      </td>
+                      <td className="py-2 sm:py-4 sm:px-4 flex justify-between sm:table-cell">
+                        <span className="sm:hidden text-espresso-light">Available:</span>
+                        <span className={`font-medium ${currentQty === 0 ? 'text-red-500' : 'text-ink'}`}>
+                          {currentQty}
+                        </span>
+                      </td>
+                      <td className="py-3 sm:py-4 sm:pr-6 text-left sm:text-right border-t border-line sm:border-0 mt-3 sm:mt-0 pt-4 sm:pt-0">
+                        <div className="flex items-center justify-between sm:justify-end gap-2">
+                          <span className="sm:hidden text-espresso-light">Update:</span>
+                          <div className="flex items-center gap-1 bg-cream/30 border border-line rounded-lg p-1">
+                            <button 
+                              onClick={() => setQuantities(prev => ({...prev, [item.id]: Math.max(0, (prev[item.id] || 0) - 1)}))}
+                              className="w-7 h-7 rounded bg-ivory text-ink border border-line flex items-center justify-center hover:bg-cream hover:border-champagne"
+                            >
+                              -
+                            </button>
+                            <input 
+                              type="number"
+                              value={currentQty}
+                              onChange={(e) => setQuantities(prev => ({...prev, [item.id]: Math.max(0, parseInt(e.target.value) || 0)}))}
+                              className="w-12 h-7 bg-transparent text-center text-sm outline-none text-ink font-medium"
+                            />
+                            <button 
+                              onClick={() => setQuantities(prev => ({...prev, [item.id]: (prev[item.id] || 0) + 1}))}
+                              className="w-7 h-7 rounded bg-ivory text-ink border border-line flex items-center justify-center hover:bg-cream hover:border-champagne"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

@@ -1,37 +1,17 @@
+import { useEffect, useState } from "react";
 import { Package, MapPin, Heart, ShoppingBag } from "lucide-react";
 import WelcomeSection from "../components/dashboard/WelcomeSection";
 import OverviewCard from "../components/dashboard/OverviewCard";
 import RecentOrders from "../components/dashboard/RecentOrders";
 import RecommendedProducts from "../components/dashboard/RecommendedProducts";
-import type { Order } from "../components/dashboard/OrderItem";
 import type { Product } from "../types";
+import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
+import { supabase } from "../lib/supabase";
+import type { Order } from "../components/dashboard/OrderItem";
 
-// Mock Data
-const MOCK_ORDERS: Order[] = [
-  {
-    id: "QL-4829",
-    date: "Mar 1, 2024",
-    products: 3,
-    total: 345.0,
-    status: "Processing"
-  },
-  {
-    id: "QL-4752",
-    date: "Feb 15, 2024",
-    products: 1,
-    total: 120.5,
-    status: "Delivered"
-  },
-  {
-    id: "QL-4610",
-    date: "Jan 28, 2024",
-    products: 2,
-    total: 215.0,
-    status: "Delivered"
-  }
-];
-
-const MOCK_RECOMMENDATIONS: Product[] = [
+const RECOMMENDATIONS: Product[] = [
   {
     id: "p1",
     name: "Silk Evening Gown",
@@ -107,40 +87,81 @@ const MOCK_RECOMMENDATIONS: Product[] = [
 ];
 
 export default function CustomerDashboard() {
+  const { profile, user } = useAuth();
+  const { itemCount } = useCart();
+  const { count: wishlistCount } = useWishlist();
+  const [orders, setOrders] = useState<Order[]>([]);
+  const customerName = profile?.first_name || user?.user_metadata?.first_name || user?.email?.split("@")[0] || "there";
+
+  useEffect(() => {
+    if (!supabase || !user) return;
+    const fetchOrders = async () => {
+      const { data, error } = await supabase!
+        .from("orders")
+        .select(`
+          id,
+          order_number,
+          status,
+          total,
+          created_at,
+          order_items(count)
+        `)
+        .eq("customer_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (!error && data) {
+        const mappedOrders: Order[] = data.map((row: any) => ({
+          id: row.id,
+          order_number: row.order_number,
+          date: new Date(row.created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }),
+          products: Array.isArray(row.order_items) ? (row.order_items[0] as any)?.count ?? 0 : 0,
+          total: row.total,
+          status: row.status,
+        }));
+        setOrders(mappedOrders);
+      }
+    };
+
+    fetchOrders();
+  }, [user]);
+
+  const totalOrders = orders.length;
+  const pendingOrders = orders.filter(o => ["pending", "processing", "confirmed"].includes(o.status)).length;
+  
   return (
     <>
-      <WelcomeSection customerName="Alexandra" />
+      <WelcomeSection customerName={customerName} />
       
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <OverviewCard 
           title="Total Orders" 
-          value="12" 
+          value={totalOrders.toString()} 
           icon={Package} 
           to="/account/orders" 
         />
         <OverviewCard 
           title="Pending Orders" 
-          value="1" 
+          value={pendingOrders.toString()} 
           icon={MapPin} 
           to="/account/orders" 
         />
         <OverviewCard 
           title="Wishlist Items" 
-          value="8" 
+          value={wishlistCount.toString()} 
           icon={Heart} 
           to="/wishlist" 
         />
         <OverviewCard 
           title="Cart Items" 
-          value="3" 
+          value={itemCount.toString()} 
           icon={ShoppingBag} 
           to="/cart" 
         />
       </div>
 
-      <RecentOrders orders={MOCK_ORDERS} />
+      <RecentOrders orders={orders.slice(0, 5)} />
       
-      <RecommendedProducts products={MOCK_RECOMMENDATIONS} />
+      <RecommendedProducts products={RECOMMENDATIONS} />
     </>
   );
 }

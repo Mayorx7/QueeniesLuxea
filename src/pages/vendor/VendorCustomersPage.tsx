@@ -1,27 +1,91 @@
-import { useState } from "react";
-import { Search, Mail, ExternalLink } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Search, Mail, ExternalLink, RefreshCw, AlertTriangle } from "lucide-react";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
+import { formatPrice } from "../../utils/format";
 
-const CUSTOMERS = [
-  { id: "CUS-102", name: "Chiamaka Okafor", email: "chiamaka@example.com", orders: 4, totalSpend: 345000, lastOrder: "Sep 3, 2026" },
-  { id: "CUS-108", name: "Tunde Bakare",    email: "tunde.b@example.com",    orders: 1, totalSpend: 170000, lastOrder: "Sep 3, 2026" },
-  { id: "CUS-094", name: "Aisha Bello",     email: "aisha.bello@example.com",orders: 8, totalSpend: 890000, lastOrder: "Sep 2, 2026" },
-  { id: "CUS-115", name: "Folake Davies",   email: "folake.d@example.com",   orders: 2, totalSpend: 210000, lastOrder: "Sep 1, 2026" },
-  { id: "CUS-088", name: "David Nwachukwu", email: "david.nwa@example.com",  orders: 3, totalSpend: 425000, lastOrder: "Aug 30, 2026" },
-  { id: "CUS-105", name: "Grace Ibekwe",    email: "grace.ibekwe@example.com",orders:1, totalSpend: 85000,  lastOrder: "Aug 29, 2026" },
-  { id: "CUS-091", name: "Samuel Ojo",      email: "samuel.ojo@example.com", orders: 5, totalSpend: 650000, lastOrder: "Aug 27, 2026" },
-];
-
-function formatNaira(v: number) {
-  return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(v);
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  orders: number;
+  totalSpend: number;
+  lastOrder: string;
 }
 
 export default function VendorCustomersPage() {
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const filtered = CUSTOMERS.filter(c => 
+  const fetchCustomers = async () => {
+    if (!supabase || !user) { setLoading(false); return; }
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: err } = await supabase
+        .from("order_items")
+        .select(`
+          total_price, created_at,
+          orders (
+            customer:profiles ( id, first_name, last_name, email )
+          )
+        `)
+        .eq("vendor_id", user.id);
+
+      if (err) throw err;
+
+      const customerMap = new Map<string, Customer>();
+
+      (data ?? []).forEach((row) => {
+        const order = row.orders as any;
+        const profile = order?.customer;
+        if (!profile) return;
+        const id = profile.id;
+        
+        const existing = customerMap.get(id);
+        const name = [profile.first_name, profile.last_name].filter(Boolean).join(" ") || "Unnamed";
+        const date = new Date(row.created_at);
+
+        if (existing) {
+          existing.orders += 1;
+          existing.totalSpend += row.total_price;
+          if (new Date(existing.lastOrder) < date) {
+            existing.lastOrder = date.toISOString();
+          }
+        } else {
+          customerMap.set(id, {
+            id,
+            name,
+            email: profile.email || "No email",
+            orders: 1,
+            totalSpend: row.total_price,
+            lastOrder: date.toISOString(),
+          });
+        }
+      });
+
+      setCustomers(Array.from(customerMap.values()).sort((a, b) => b.totalSpend - a.totalSpend));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load customers.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, [user]);
+
+  const filtered = useMemo(() => customers.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) || 
     c.email.toLowerCase().includes(search.toLowerCase())
-  );
+  ), [customers, search]);
+
+
+
 
   return (
     <div className="space-y-6 pb-10">
@@ -29,6 +93,15 @@ export default function VendorCustomersPage() {
         <h2 className="font-display text-2xl text-ink">Customers</h2>
         <p className="mt-1 text-sm text-espresso-light">View and manage customers who have purchased from your store.</p>
       </div>
+
+      {error && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+          <div className="flex items-center gap-2"><AlertTriangle size={16} /><span>{error}</span></div>
+          <button onClick={fetchCustomers} className="flex items-center gap-1.5 font-semibold hover:text-red-900">
+            <RefreshCw size={14} /> Retry
+          </button>
+        </div>
+      )}
 
       <div className="rounded-xl border border-line bg-ivory overflow-hidden">
         {/* Toolbar */}
@@ -58,7 +131,11 @@ export default function VendorCustomersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-line flex-1 sm:flex-none flex flex-col sm:table-row-group">
-              {filtered.length === 0 ? (
+              {loading ? (
+                <tr className="flex sm:table-row">
+                  <td colSpan={5} className="py-10 text-center text-espresso-light w-full">Loading customers...</td>
+                </tr>
+              ) : filtered.length === 0 ? (
                 <tr className="flex sm:table-row">
                   <td colSpan={5} className="py-10 text-center text-espresso-light w-full">
                     No customers found.
@@ -84,11 +161,11 @@ export default function VendorCustomersPage() {
                     </td>
                     <td className="py-2 sm:py-3.5 sm:px-4 font-medium text-ink flex justify-between sm:table-cell">
                       <span className="sm:hidden text-espresso-light">Total Spend:</span>
-                      {formatNaira(c.totalSpend)}
+                      {formatPrice(c.totalSpend)}
                     </td>
                     <td className="py-2 sm:py-3.5 sm:px-4 text-espresso-light flex justify-between sm:table-cell">
                       <span className="sm:hidden text-espresso-light">Last Order:</span>
-                      {c.lastOrder}
+                      {new Date(c.lastOrder).toLocaleDateString()}
                     </td>
                     <td className="py-3 sm:py-3.5 sm:pr-6 text-left sm:text-right border-t border-line sm:border-0 mt-3 sm:mt-0 pt-4 sm:pt-0">
                       <div className="flex items-center justify-start sm:justify-end gap-2">

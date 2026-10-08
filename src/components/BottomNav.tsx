@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, ShoppingBag, Heart, User, LayoutGrid } from "lucide-react";
+import { Home, ShoppingBag, Heart, User, LayoutGrid, LogIn } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useAuth } from "../context/AuthContext";
 
 interface NavItem {
   label: string;
@@ -15,6 +16,7 @@ export default function BottomNav() {
   const location = useLocation();
   const { itemCount } = useCart();
   const { count: wishlistCount } = useWishlist();
+  const { user, loading } = useAuth();
 
   const isActive = (to: string, exact?: boolean) => {
     if (exact) return location.pathname === to;
@@ -46,9 +48,9 @@ export default function BottomNav() {
       badge: itemCount,
     },
     {
-      label: "Profile",
-      to: "/account",
-      icon: <User size={22} />,
+      label: loading ? "…" : user ? "Profile" : "Login",
+      to: loading ? "#" : user ? "/account" : "/login",
+      icon: loading ? <User size={22} /> : user ? <User size={22} /> : <LogIn size={22} />,
     },
   ];
 

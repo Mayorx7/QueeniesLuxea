@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle, MapPin, Truck, ShoppingBag } from "lucide-react";
 
@@ -13,9 +13,9 @@ interface OrderState {
 }
 
 function formatPrice(value: number) {
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat("en-NG", {
     style: "currency",
-    currency: "USD",
+    currency: "NGN",
     minimumFractionDigits: value % 1 === 0 ? 0 : 2,
   }).format(value);
 }

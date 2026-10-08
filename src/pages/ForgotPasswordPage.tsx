@@ -1,16 +1,29 @@
-﻿import { type FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
+import { supabase } from "../lib/supabase";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: connect to auth provider password reset
-    setSent(true);
+    setError("");
+    if (!supabase) return;
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { 
+      redirectTo: `${window.location.origin}/reset-password` 
+    });
+    
+    if (error) {
+      setError(error.message);
+    } else {
+      setSent(true);
+    }
   };
 
   const inputCls =
@@ -63,6 +76,7 @@ export default function ForgotPasswordPage() {
             >
               Send Reset Link
             </button>
+            {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
           </form>
 
           <p className="mt-8 text-center text-sm text-espresso-light">

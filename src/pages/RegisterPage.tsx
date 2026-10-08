@@ -1,18 +1,46 @@
 ﻿import { type FormEvent, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
+import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { destinationFor } from "../auth/redirects";
 
 export default function RegisterPage() {
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", confirmPassword: "" });
   const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [resending, setResending] = useState(false);
+  const navigate = useNavigate();
 
   const set = (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((p) => ({ ...p, [field]: e.target.value }));
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: connect to auth provider
+    if (!supabase) return setError("Account creation is not configured yet. Add the public Supabase environment values first.");
+    if (form.password.length < 12) return setError("Use a password with at least 12 characters.");
+    if (form.password !== form.confirmPassword) return setError("Passwords do not match.");
+    setSubmitting(true); setError("");
+    const { data, error: signUpError } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { emailRedirectTo: `${window.location.origin}/auth/callback`, data: { first_name: form.firstName, last_name: form.lastName } } });
+    setSubmitting(false);
+    if (signUpError) return setError(signUpError.message);
+    if (data.session) {
+      const { data: profileData } = await supabase.from("profiles").select("role").eq("id", data.user?.id).maybeSingle();
+      navigate(destinationFor(profileData?.role), { replace: true });
+      return;
+    }
+    setMessage("Check your inbox to confirm your email before signing in.");
+  };
+
+  const resendConfirmation = async () => {
+    if (!supabase || !form.email) return;
+    setResending(true); setError("");
+    const { error: resendError } = await supabase.auth.resend({ type: "signup", email: form.email, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
+    setResending(false);
+    if (resendError) return setError(resendError.message);
+    setMessage("A new confirmation email has been sent.");
   };
 
   const inputCls =
@@ -47,7 +75,7 @@ export default function RegisterPage() {
               type={showPw ? "text" : "password"}
               autoComplete="new-password"
               required
-              minLength={8}
+              minLength={12}
               value={form.password}
               onChange={set("password")}
               className={inputCls + " pr-10"}
@@ -61,7 +89,31 @@ export default function RegisterPage() {
               {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
-          <p className="mt-1.5 text-xs text-espresso-light">Minimum 8 characters</p>
+          <p className="mt-1.5 text-xs text-espresso-light">Minimum 12 characters</p>
+        </div>
+
+        <div>
+          <label htmlFor="reg-confirm-password" className="eyebrow mb-2 block text-espresso-light">Confirm password</label>
+          <div className="relative">
+            <input
+              id="reg-confirm-password"
+              type={showPw ? "text" : "password"}
+              autoComplete="new-password"
+              required
+              minLength={12}
+              value={form.confirmPassword}
+              onChange={set("confirmPassword")}
+              className={inputCls + " pr-10"}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw((s) => !s)}
+              aria-label={showPw ? "Hide password" : "Show password"}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-espresso-light hover:text-espresso"
+            >
+              {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
         </div>
 
         <p className="text-xs text-espresso-light">
@@ -71,11 +123,14 @@ export default function RegisterPage() {
           <Link to="/privacy" className="link-underline text-espresso hover:text-gold">Privacy Policy</Link>.
         </p>
 
+        {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+        {message && <div className="text-sm text-emerald-700"><p role="status">{message}</p><button type="button" disabled={resending} onClick={() => void resendConfirmation()} className="mt-2 text-xs font-semibold text-espresso underline disabled:opacity-60">{resending ? "Sending…" : "Resend confirmation email"}</button></div>}
         <button
           type="submit"
+          disabled={submitting || !isSupabaseConfigured}
           className="mt-2 w-full bg-ink py-4 text-xs font-semibold uppercase tracking-widest text-ivory transition-colors hover:bg-espresso"
         >
-          Create Account
+          {submitting ? "Creating account…" : "Create Account"}
         </button>
       </form>
 

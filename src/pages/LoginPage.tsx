@@ -1,21 +1,35 @@
 ﻿import { type FormEvent, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
-
-/*
- * Frontend UI only — not connected to any authentication service.
- * Wire up to your auth provider (e.g. Supabase, Auth0, NextAuth) when ready.
- */
+import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { destinationFor } from "../auth/redirects";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const locationState = location.state as { from?: string; authMessage?: string } | null;
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    // TODO: connect to auth provider
+    if (!supabase) return setError("Sign in is not configured yet. Add the public Supabase environment values first.");
+    setSubmitting(true); setError("");
+    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    setSubmitting(false);
+    if (signInError) return setError(signInError.message.toLowerCase().includes("confirm") ? "Confirm your email before signing in." : "Unable to sign in with those details.");
+    const { data: profileData } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
+    navigate(destinationFor(profileData?.role, locationState?.from), { replace: true });
+  };
+
+  const signInWithProvider = async (provider: "google" | "apple") => {
+    if (!supabase) return setError("Sign in is not configured yet.");
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/auth/callback` } });
+    if (oauthError) setError(oauthError.message);
   };
 
   const inputCls =
@@ -24,6 +38,7 @@ export default function LoginPage() {
   return (
     <div className="mx-auto max-w-sm px-5 py-16 sm:px-8 sm:py-24">
       <SectionHeading eyebrow="Welcome Back" title="Sign In" align="center" className="mb-10" />
+      {locationState?.authMessage && <p role="status" className="mb-5 text-center text-sm text-espresso-light">{locationState.authMessage}</p>}
 
       <form onSubmit={handleSubmit} aria-label="Sign in form" className="flex flex-col gap-5">
         <div>
@@ -73,10 +88,12 @@ export default function LoginPage() {
 
         <button
           type="submit"
+          disabled={submitting || !isSupabaseConfigured}
           className="mt-2 w-full bg-ink py-4 text-xs font-semibold uppercase tracking-widest text-ivory transition-colors hover:bg-espresso"
         >
-          Sign In
+          {submitting ? "Signing in…" : "Sign In"}
         </button>
+        {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
       </form>
 
       <p className="mt-8 text-center text-sm text-espresso-light">
@@ -93,6 +110,7 @@ export default function LoginPage() {
             <button
               key={provider}
               type="button"
+              onClick={() => void signInWithProvider(provider.toLowerCase() as "google" | "apple")}
               className="w-full border border-espresso/25 py-3 text-xs font-semibold uppercase tracking-wider text-espresso transition-colors hover:border-espresso hover:bg-cream"
             >
               Continue with {provider}

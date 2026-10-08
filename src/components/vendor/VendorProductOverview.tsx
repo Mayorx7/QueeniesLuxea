@@ -1,24 +1,77 @@
-import { Edit2, Eye, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Edit2, Eye, Trash2, Package } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "../../lib/supabase";
+import { useAuth } from "../../context/AuthContext";
+import { formatPrice } from "../../utils/format";
 
-const PRODUCTS = [
-  { id: "p1", name: "Amara Silk Gown", category: "Dresses", price: 125000, stock: 15, status: "Active", img: "https://images.unsplash.com/photo-1566160983935-8659b85c884d?q=80&w=100&auto=format&fit=crop" },
-  { id: "p2", name: "Linen Summer Blazer", category: "Tops", price: 85000, stock: 0, status: "Out of Stock", img: "https://images.unsplash.com/photo-1591561954557-26941169b49e?q=80&w=100&auto=format&fit=crop" },
-  { id: "p3", name: "Pleated Skirt", category: "Bottoms", price: 65000, stock: 8, status: "Active", img: "https://images.unsplash.com/photo-1583391733958-650fac5ceb1c?q=80&w=100&auto=format&fit=crop" },
-  { id: "p4", name: "Velvet Wrap Coat", category: "Outerwear", price: 210000, stock: 0, status: "Draft", img: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=100&auto=format&fit=crop" },
-];
-
-const STATUS_BADGE: Record<string, string> = {
-  Active: "bg-emerald-50 text-emerald-700",
-  Draft: "bg-slate-100 text-slate-700",
-  "Out of Stock": "bg-red-50 text-red-700",
-};
-
-function formatNaira(v: number) {
-  return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", minimumFractionDigits: 0 }).format(v);
+interface ProductRow {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+  status: string;
+  img: string | null;
 }
 
+const STATUS_BADGE: Record<string, string> = {
+  published: "bg-emerald-50 text-emerald-700",
+  draft: "bg-slate-100 text-slate-700",
+  archived: "bg-red-50 text-red-700",
+};
+
 export default function VendorProductOverview() {
+  const { user } = useAuth();
+  const [products, setProducts] = useState<ProductRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      if (!supabase || !user) return;
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select(`
+            id, name, category, price, status,
+            product_images ( url, display_order ),
+            product_variants ( stock )
+          `)
+          .eq("vendor_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(4);
+
+        if (error) throw error;
+
+        const mapped: ProductRow[] = (data ?? []).map(p => {
+          const stock = (p.product_variants ?? []).reduce((sum, v) => sum + (v.stock ?? 0), 0);
+          const images = [...(p.product_images ?? [])].sort(
+            (a, b) => (a as any).display_order - (b as any).display_order
+          );
+          
+          return {
+            id: p.id,
+            name: p.name,
+            category: p.category || "Uncategorized",
+            price: p.price,
+            stock,
+            status: p.status,
+            img: images[0]?.url || null,
+          };
+        });
+
+        setProducts(mapped);
+      } catch (err) {
+        console.error("Failed to fetch recent products", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProducts();
+  }, [user]);
+
+
+
   return (
     <div className="rounded-xl border border-line bg-ivory overflow-hidden">
       <div className="flex items-center justify-between border-b border-line p-5 sm:px-6">
@@ -41,35 +94,47 @@ export default function VendorProductOverview() {
             </tr>
           </thead>
           <tbody className="divide-y divide-line flex-1 sm:flex-none flex flex-col sm:table-row-group">
-            {PRODUCTS.map((p) => (
+            {loading ? (
+              <tr className="flex sm:table-row">
+                <td colSpan={6} className="py-10 text-center text-espresso-light text-sm">
+                  Loading products...
+                </td>
+              </tr>
+            ) : products.length === 0 ? (
+              <tr className="flex sm:table-row">
+                <td colSpan={6} className="py-10 text-center text-espresso-light text-sm">
+                  No products found. Add your first product to get started.
+                </td>
+              </tr>
+            ) : products.map((p) => (
               <tr key={p.id} className="flex flex-col sm:table-row hover:bg-cream/30 transition-colors p-5 sm:p-0">
                 <td className="py-3.5 sm:pl-6">
                   <div className="flex items-center gap-3">
-                    <img src={p.img} alt={p.name} className="h-12 w-12 rounded-lg object-cover" />
-                    <span className="font-medium text-ink">{p.name}</span>
+                    {p.img ? (
+                      <img src={p.img} alt={p.name} className="h-12 w-12 rounded-lg object-cover" />
+                    ) : (
+                      <div className="h-12 w-12 rounded-lg bg-cream flex items-center justify-center">
+                        <Package size={16} className="text-espresso-light" />
+                      </div>
+                    )}
+                    <span className="font-medium text-ink max-w-[140px] truncate" title={p.name}>{p.name}</span>
                   </div>
                 </td>
                 <td className="py-2 sm:py-3.5 sm:px-4 text-espresso-light text-xs sm:text-sm">{p.category}</td>
-                <td className="py-1 sm:py-3.5 sm:px-4 font-medium text-ink">{formatNaira(p.price)}</td>
+                <td className="py-1 sm:py-3.5 sm:px-4 font-medium text-ink">{formatPrice(p.price)}</td>
                 <td className={`py-1 sm:py-3.5 sm:px-4 font-medium ${p.stock === 0 ? 'text-red-500' : 'text-ink'}`}>
                   {p.stock}
                 </td>
                 <td className="py-2 sm:py-3.5 sm:px-4">
-                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-wide ${STATUS_BADGE[p.status]}`}>
-                    {p.status}
+                  <span className={`inline-flex items-center rounded-md px-2 py-1 text-[0.65rem] font-semibold uppercase tracking-wide ${STATUS_BADGE[p.status] || STATUS_BADGE.draft}`}>
+                    {p.stock === 0 && p.status === 'published' ? 'Out of Stock' : p.status}
                   </span>
                 </td>
                 <td className="py-3 sm:py-3.5 sm:pr-6 text-left sm:text-right">
                   <div className="flex items-center justify-start sm:justify-end gap-2">
-                    <button className="p-1.5 text-espresso-light hover:bg-cream rounded-md" aria-label="View">
-                      <Eye size={16} />
-                    </button>
-                    <button className="p-1.5 text-espresso-light hover:bg-cream rounded-md" aria-label="Edit">
+                    <Link to={`/vendor/products/${p.id}/edit`} className="p-1.5 text-espresso-light hover:bg-cream rounded-md" aria-label="Edit">
                       <Edit2 size={16} />
-                    </button>
-                    <button className="p-1.5 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-md" aria-label="Delete">
-                      <Trash2 size={16} />
-                    </button>
+                    </Link>
                   </div>
                 </td>
               </tr>

@@ -1,5 +1,6 @@
-import { Menu, Search, Bell } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Menu, Search, Bell, LogOut } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 interface DashboardHeaderProps {
   onMenuClick: () => void;
@@ -7,9 +8,11 @@ interface DashboardHeaderProps {
 }
 
 export default function DashboardHeader({ onMenuClick, title = "Dashboard" }: DashboardHeaderProps) {
-  // Use mock data for now
-  const customerName = "Alexandra Whitmore";
+  const { profile, user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const customerName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || user?.email || "Customer";
   const initials = customerName.split(" ").map((n) => n[0]).join("");
+  const handleSignOut = async () => { await signOut(); navigate("/", { replace: true }); };
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line bg-ivory/80 px-4 backdrop-blur-md sm:px-6 lg:h-20 lg:px-8">
@@ -41,6 +44,10 @@ export default function DashboardHeader({ onMenuClick, title = "Dashboard" }: Da
         </button>
 
         <div className="h-6 w-px bg-line hidden sm:block"></div>
+
+        <button type="button" onClick={() => void handleSignOut()} className="p-2 text-espresso-light transition-colors hover:text-ink" aria-label="Sign out">
+          <LogOut size={18} />
+        </button>
 
         <Link 
           to="/account/profile" 

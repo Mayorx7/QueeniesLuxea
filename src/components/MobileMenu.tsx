@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { X } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 interface NavLink {
   label: string;
@@ -17,6 +18,7 @@ interface MobileMenuProps {
 export default function MobileMenu({ open, onClose, links }: MobileMenuProps) {
   const location = useLocation();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     onClose();
@@ -65,6 +67,21 @@ export default function MobileMenu({ open, onClose, links }: MobileMenuProps) {
               {link.label}
             </Link>
           ))}
+          {!loading && !user && (
+            <>
+              <Link to="/login" className="border-b border-line py-4 font-display text-xl text-ink">
+                Login
+              </Link>
+              <Link to="/register" className="border-b border-line py-4 font-display text-xl text-[var(--color-gold)]">
+                Register
+              </Link>
+            </>
+          )}
+          {!loading && user && (
+            <Link to="/account" className="border-b border-line py-4 font-display text-xl text-[var(--color-gold)]">
+              My Account
+            </Link>
+          )}
         </nav>
         <div className="border-t border-line px-6 py-5 text-xs text-espresso-light">
           <p>Complimentary shipping on orders over $150</p>

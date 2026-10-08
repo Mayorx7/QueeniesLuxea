@@ -1,56 +1,114 @@
-import { useState } from "react";
-import { Plus, Search, Pencil, Trash2, Tag, Eye } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Plus, Search, Pencil, Trash2, Tag, Eye, RefreshCw, AlertTriangle } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "../../lib/supabase";
+import { formatPrice } from "../../utils/format";
 
 interface AdminProduct {
   id: string;
   name: string;
-  category: string;
+  slug: string | null;
+  category: string | null;
   price: number;
   stock: number;
-  sold: number;
-  status: "Active" | "Draft" | "Out of Stock";
-  image: string;
+  status: "draft" | "published" | "archived";
+  image: string | null;
+  vendor: string;
 }
-
-const PRODUCTS: AdminProduct[] = [
-  { id: "p1",  name: "Amara Silk Column Gown",   category: "Dresses",  price: 1280, stock: 14, sold: 30, status: "Active",       image: "https://images.unsplash.com/photo-1566160983935-8659b85c884d?q=80&w=100&auto=format&fit=crop" },
-  { id: "p2",  name: "Verity Wrap Midi Dress",    category: "Dresses",  price: 640,  stock: 22, sold: 44, status: "Active",       image: "https://images.unsplash.com/photo-1583391733958-650fac5ceb1c?q=80&w=100&auto=format&fit=crop" },
-  { id: "p3",  name: "Calla Linen Blazer",        category: "Tops",     price: 640,  stock: 8,  sold: 35, status: "Active",       image: "https://images.unsplash.com/photo-1591561954557-26941169b49e?q=80&w=100&auto=format&fit=crop" },
-  { id: "p4",  name: "Riviera Knit Cardigan",     category: "Tops",     price: 760,  stock: 19, sold: 24, status: "Active",       image: "https://images.unsplash.com/photo-1624623278313-a930126a11c3?q=80&w=100&auto=format&fit=crop" },
-  { id: "p5",  name: "Bastien Crepe Trousers",    category: "Bottoms",  price: 480,  stock: 0,  sold: 18, status: "Out of Stock", image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?q=80&w=100&auto=format&fit=crop" },
-  { id: "p6",  name: "Soleil Straw Hat",          category: "Accessories", price: 1240, stock: 5, sold: 12, status: "Active",    image: "https://images.unsplash.com/photo-1521369909029-2afed882baee?q=80&w=100&auto=format&fit=crop" },
-  { id: "p7",  name: "Pleated Satin Midi Skirt",  category: "Bottoms",  price: 395,  stock: 11, sold: 21, status: "Active",       image: "https://images.unsplash.com/photo-1551163943-3f6a855d1153?q=80&w=100&auto=format&fit=crop" },
-  { id: "p8",  name: "Cashmere Wrap Coat",        category: "Outerwear",price: 2100, stock: 3,  sold: 9,  status: "Draft",        image: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=100&auto=format&fit=crop" },
-];
 
 const STATUS_BADGE: Record<AdminProduct["status"], string> = {
-  Active:          "bg-emerald-50 text-emerald-700",
-  Draft:           "bg-cream text-espresso-light",
-  "Out of Stock":  "bg-red-50 text-red-600",
+  published: "bg-emerald-50 text-emerald-700",
+  draft:     "bg-cream text-espresso-light",
+  archived:  "bg-red-50 text-red-600",
 };
 
-const CATEGORIES = ["All", "Dresses", "Tops", "Bottoms", "Outerwear", "Accessories"];
+const STATUS_LABEL: Record<AdminProduct["status"], string> = {
+  published: "Published",
+  draft:     "Draft",
+  archived:  "Archived",
+};
 
-function fmt(v: number) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0 }).format(v);
-}
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState(PRODUCTS);
+  const [products, setProducts] = useState<AdminProduct[]>([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState<string | null>(null);
   const [search, setSearch]     = useState("");
   const [cat, setCat]           = useState("All");
+
+  const fetchProducts = useCallback(async () => {
+    if (!supabase) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: err } = await supabase
+        .from("products")
+        .select(`
+          id, name, slug, category, price, status,
+          product_images ( url, display_order ),
+          product_variants ( stock ),
+          vendor:profiles ( first_name, last_name )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (err) throw err;
+
+      const mapped: AdminProduct[] = (data ?? []).map((row) => {
+        const imgs = (row.product_images as { url: string; display_order: number }[] | null) ?? [];
+        const sorted = [...imgs].sort((a, b) => a.display_order - b.display_order);
+        const variants = (row.product_variants as { stock: number }[] | null) ?? [];
+        const totalStock = variants.reduce((sum, v) => sum + (v.stock ?? 0), 0);
+        const v = row.vendor as { first_name: string | null; last_name: string | null } | null;
+        return {
+          id:       row.id,
+          name:     row.name,
+          slug:     row.slug ?? null,
+          category: row.category ?? null,
+          price:    row.price,
+          stock:    totalStock,
+          status:   row.status as AdminProduct["status"],
+          image:    sorted[0]?.url ?? null,
+          vendor:   [v?.first_name, v?.last_name].filter(Boolean).join(" ") || "Unknown vendor",
+        };
+      });
+      setProducts(mapped);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load products.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchProducts(); }, [fetchProducts]);
+
+  const categories = ["All", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean)))] as string[];
 
   const filtered = products.filter((p) => {
     const matchCat = cat === "All" || p.category === cat;
     const q = search.toLowerCase();
-    return matchCat && (!q || p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
+    return matchCat && (!q || p.name.toLowerCase().includes(q) || (p.category ?? "").toLowerCase().includes(q));
   });
 
-  const remove = (id: string) => setProducts((ps) => ps.filter((p) => p.id !== id));
+  const remove = async (id: string) => {
+    if (!supabase) return;
+    if (!window.confirm("Delete this product? This cannot be undone.")) return;
+    const { error: err } = await supabase.from("products").delete().eq("id", id);
+    if (err) { alert(err.message); return; }
+    setProducts((ps) => ps.filter((p) => p.id !== id));
+  };
 
   return (
     <div className="space-y-6">
+      {/* Error banner */}
+      {error && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
+          <div className="flex items-center gap-2"><AlertTriangle size={16} /><span>{error}</span></div>
+          <button onClick={fetchProducts} className="flex items-center gap-1.5 font-semibold hover:text-red-900">
+            <RefreshCw size={14} /> Retry
+          </button>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-sm">
@@ -71,7 +129,7 @@ export default function AdminProductsPage() {
 
       {/* Category tabs */}
       <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <button
             key={c}
             onClick={() => setCat(c)}
@@ -88,9 +146,9 @@ export default function AdminProductsPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
           { label: "Total Products", val: products.length },
-          { label: "Active",         val: products.filter((p) => p.status === "Active").length },
-          { label: "Out of Stock",   val: products.filter((p) => p.status === "Out of Stock").length },
-          { label: "Draft",          val: products.filter((p) => p.status === "Draft").length },
+          { label: "Published",      val: products.filter((p) => p.status === "published").length },
+          { label: "Draft",          val: products.filter((p) => p.status === "draft").length },
+          { label: "Archived",       val: products.filter((p) => p.status === "archived").length },
         ].map((s) => (
           <div key={s.label} className="rounded-xl border border-line bg-ivory px-4 py-3">
             <p className="eyebrow text-espresso-light">{s.label}</p>
@@ -105,7 +163,7 @@ export default function AdminProductsPage() {
           <table className="w-full text-sm">
             <thead className="bg-cream/60">
               <tr>
-                {["Product", "Category", "Price", "Stock", "Sold", "Status", ""].map((h) => (
+                {["Product", "Vendor", "Category", "Price", "Stock", "Status", ""].map((h) => (
                   <th key={h} className="py-3.5 px-4 text-left text-xs font-semibold text-espresso-light first:pl-6 last:pr-6">
                     {h}
                   </th>
@@ -113,38 +171,60 @@ export default function AdminProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {loading ? (
+                [1, 2, 3, 4, 5].map((i) => (
+                  <tr key={i} className="border-t border-line">
+                    {[1,2,3,4,5,6,7].map((j) => (
+                      <td key={j} className="py-4 px-4 first:pl-6 last:pr-6">
+                        <div className="h-4 rounded bg-cream animate-pulse" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center text-espresso-light">No products found.</td>
+                  <td colSpan={7} className="py-16 text-center text-espresso-light">
+                    {search || cat !== "All" ? "No products match your filters." : "No products yet."}
+                  </td>
                 </tr>
               ) : (
                 filtered.map((p) => (
                   <tr key={p.id} className="border-t border-line hover:bg-cream/30 transition-colors">
                     <td className="py-3.5 pl-6">
                       <div className="flex items-center gap-3">
-                        <img src={p.image} alt={p.name} className="h-10 w-10 rounded-lg object-cover shrink-0" />
+                        {p.image ? (
+                          <img src={p.image} alt={p.name} className="h-10 w-10 rounded-lg object-cover shrink-0" />
+                        ) : (
+                          <div className="h-10 w-10 rounded-lg bg-cream shrink-0" />
+                        )}
                         <span className="font-semibold text-ink">{p.name}</span>
                       </div>
                     </td>
+                    <td className="py-3.5 px-4 text-espresso-light text-xs">{p.vendor}</td>
                     <td className="py-3.5 px-4">
                       <span className="inline-flex items-center gap-1 text-espresso-light">
                         <Tag size={11} className="text-champagne" />
-                        {p.category}
+                        {p.category ?? "—"}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-ink">{fmt(p.price)}</td>
-                    <td className={`py-3.5 px-4 font-medium ${p.stock === 0 ? "text-red-600" : p.stock <= 5 ? "text-amber-600" : "text-ink"}`}>
+                    <td className="py-3.5 px-4 font-semibold text-ink">{formatPrice(p.price)}</td>
+                    <td className={`py-3.5 px-4 font-medium ${
+                      p.stock === 0 ? "text-red-600" : p.stock <= 5 ? "text-amber-600" : "text-ink"
+                    }`}>
                       {p.stock === 0 ? "—" : p.stock}
                     </td>
-                    <td className="py-3.5 px-4 text-espresso-light">{p.sold}</td>
                     <td className="py-3.5 px-4">
                       <span className={`rounded-full px-2.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide ${STATUS_BADGE[p.status]}`}>
-                        {p.status}
+                        {STATUS_LABEL[p.status]}
                       </span>
                     </td>
                     <td className="py-3.5 pr-6">
                       <div className="flex items-center justify-end gap-2">
-                        <Link to={`/product/${p.id}`} className="rounded-lg p-1.5 text-espresso-light hover:bg-cream hover:text-ink transition-colors" aria-label="Preview">
+                        <Link
+                          to={`/product/${p.slug ?? p.id}`}
+                          className="rounded-lg p-1.5 text-espresso-light hover:bg-cream hover:text-ink transition-colors"
+                          aria-label="Preview"
+                        >
                           <Eye size={15} />
                         </Link>
                         <button className="rounded-lg p-1.5 text-espresso-light hover:bg-cream hover:text-ink transition-colors" aria-label="Edit">

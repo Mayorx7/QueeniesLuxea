@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   ShoppingBag,
@@ -9,6 +9,7 @@ import {
   LogOut,
   X,
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 interface AdminSidebarProps {
   isOpen: boolean;
@@ -25,6 +26,11 @@ const NAV_ITEMS = [
 ];
 
 export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
+  const { profile, user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const adminName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || user?.email || "Administrator";
+  const initials = adminName.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+  const handleSignOut = async () => { await signOut(); navigate("/", { replace: true }); };
   return (
     <>
       {/* Mobile backdrop */}
@@ -100,13 +106,13 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
         <div className="border-t border-white/10 p-4">
           <div className="flex items-center gap-3 rounded-xl px-2 py-2">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold/20 ring-1 ring-gold/40">
-              <span className="font-display text-sm text-gold">S</span>
+              <span className="font-display text-sm text-gold">{initials}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-ivory truncate">Super Admin</p>
-              <p className="text-[0.65rem] text-white/40 truncate">admin@queensluxea.com</p>
+              <p className="text-sm font-medium text-ivory truncate">{adminName}</p>
+              <p className="text-[0.65rem] text-white/40 truncate">{profile?.email || user?.email}</p>
             </div>
-            <button aria-label="Log out" className="text-white/40 hover:text-white">
+            <button type="button" onClick={() => void handleSignOut()} aria-label="Log out" className="text-white/40 hover:text-white">
               <LogOut size={14} />
             </button>
           </div>

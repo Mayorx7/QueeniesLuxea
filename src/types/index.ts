@@ -9,6 +9,9 @@ export type ProductCategory =
 
 export interface Product {
   id: string;
+  /** UUID of the vendor who owns this product. Present for DB products;
+   *  static/demo products use a placeholder string. */
+  vendorId?: string;
   name: string;
   slug: string;
   category: ProductCategory;
@@ -25,10 +28,12 @@ export interface Product {
   isFeatured: boolean;
   inStock: boolean;
   tags: string[];
+  sku?: string;
 }
 
 export interface CartItem {
   productId: string;
+  variantId?: string; // Maps to product_variants table
   quantity: number;
   color: string;
   size: string;

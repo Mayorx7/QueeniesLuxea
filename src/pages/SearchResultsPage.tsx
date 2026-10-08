@@ -22,6 +22,8 @@ export default function SearchResultsPage() {
     setSort,
     maxPrice,
     search,
+    loading,
+    error,
   } = useProductListing();
 
   return (
@@ -95,7 +97,22 @@ export default function SearchResultsPage() {
               <SortDropdown value={sort} onChange={setSort} />
             </div>
 
-            {products.length === 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 xl:grid-cols-4">
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="aspect-[3/4] rounded-lg bg-cream"></div>
+                    <div className="mt-4 h-4 w-2/3 rounded bg-cream"></div>
+                    <div className="mt-2 h-3 w-1/2 rounded bg-cream"></div>
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-xl bg-red-50 text-red-600">
+                <p className="font-medium">{error}</p>
+                <button onClick={() => window.location.reload()} className="text-sm underline">Retry</button>
+              </div>
+            ) : products.length === 0 ? (
               <EmptyState
                 icon={SearchX}
                 title="No products match"

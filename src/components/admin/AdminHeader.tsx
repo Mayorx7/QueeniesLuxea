@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Menu, Search, Bell, X } from "lucide-react";
+import { Menu, Search, Bell, X, LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 interface AdminHeaderProps {
   onMenuClick: () => void;
@@ -9,6 +11,10 @@ interface AdminHeaderProps {
 export default function AdminHeader({ onMenuClick, title = "Overview" }: AdminHeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const { profile, user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const adminName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || user?.email || "Admin";
+  const handleSignOut = async () => { await signOut(); navigate("/", { replace: true }); };
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-line bg-ivory/90 px-4 backdrop-blur-md sm:px-6 lg:h-[72px] lg:px-8">
@@ -64,14 +70,18 @@ export default function AdminHeader({ onMenuClick, title = "Overview" }: AdminHe
 
         <div className="h-5 w-px bg-line" />
 
+        <button type="button" onClick={() => void handleSignOut()} className="rounded-lg p-2 text-espresso-light hover:bg-cream hover:text-ink" aria-label="Sign out">
+          <LogOut size={18} />
+        </button>
+
         {/* Admin avatar */}
         <div className="flex items-center gap-2.5">
           <div className="hidden text-right sm:block">
-            <p className="text-sm font-semibold text-ink">Super Admin</p>
+            <p className="text-sm font-semibold text-ink">{adminName}</p>
             <p className="text-[0.65rem] text-espresso-light">Administrator</p>
           </div>
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-ink">
-            <span className="font-display text-sm text-ivory">S</span>
+            <span className="font-display text-sm text-ivory">{adminName.charAt(0).toUpperCase()}</span>
           </div>
         </div>
       </div>
