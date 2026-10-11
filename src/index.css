@@ -65,6 +65,8 @@
 
   a, button {
     -webkit-tap-highlight-color: transparent;
+    /* Eliminate the 300ms tap delay on mobile browsers */
+    touch-action: manipulation;
   }
 
   :focus-visible {

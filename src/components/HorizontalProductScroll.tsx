@@ -56,7 +56,7 @@ export default function HorizontalProductScroll({
           {products.map((product) => (
             <div
               key={product.id}
-              className="snap-start w-44 shrink-0 sm:w-52"
+              className="snap-start w-40 shrink-0 sm:w-48"
             >
               <ProductCard product={product} compact />
             </div>

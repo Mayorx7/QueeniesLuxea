@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, ShoppingBag, Heart, User, LayoutGrid, LogIn } from "lucide-react";
 import { useCart } from "../context/CartContext";
@@ -17,6 +18,13 @@ export default function BottomNav() {
   const { itemCount } = useCart();
   const { count: wishlistCount } = useWishlist();
   const { user, loading } = useAuth();
+  // Only animate on first mount — not on every route change
+  const mountedRef = useRef(false);
+  const didAnimate = useRef(false);
+  if (!mountedRef.current) {
+    mountedRef.current = true;
+    didAnimate.current = true;
+  }
 
   const isActive = (to: string, exact?: boolean) => {
     if (exact) return location.pathname === to;
@@ -57,7 +65,7 @@ export default function BottomNav() {
   return (
     <nav
       aria-label="Mobile navigation"
-      className="fixed bottom-0 left-0 right-0 z-50 slide-in-up md:hidden"
+      className={`fixed bottom-0 left-0 right-0 z-50 md:hidden${didAnimate.current ? " slide-in-up" : ""}`}
     >
       {/* Hairline separator */}
       <div className="h-px bg-[var(--color-line)]" />

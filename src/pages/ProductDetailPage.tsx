@@ -347,7 +347,7 @@ export default function ProductDetailPage() {
                     Size Guide
                   </button>
                 </div>
-                <div className="mt-3 grid grid-cols-5 gap-2 sm:grid-cols-6">
+                <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-6">
                   {product.sizes.map((s) => (
                     <button
                       key={s}

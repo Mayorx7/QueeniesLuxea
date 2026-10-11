@@ -89,7 +89,7 @@ export default function CartPage() {
                         type="button"
                         onClick={() => removeItem(line.productId, line.color, line.size)}
                         aria-label={`Remove ${line.product.name} from bag`}
-                        className="text-espresso-light hover:text-ink"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center text-espresso-light hover:text-ink"
                       >
                         <X size={18} />
                       </button>
@@ -101,7 +101,7 @@ export default function CartPage() {
                           type="button"
                           aria-label="Decrease quantity"
                           onClick={() => updateQuantity(line.productId, line.color, line.size, line.quantity - 1)}
-                          className="flex h-9 w-9 items-center justify-center hover:bg-cream"
+                          className="flex h-11 w-11 items-center justify-center hover:bg-cream"
                         >
                           <Minus size={13} />
                         </button>
@@ -110,7 +110,7 @@ export default function CartPage() {
                           type="button"
                           aria-label="Increase quantity"
                           onClick={() => updateQuantity(line.productId, line.color, line.size, line.quantity + 1)}
-                          className="flex h-9 w-9 items-center justify-center hover:bg-cream"
+                          className="flex h-11 w-11 items-center justify-center hover:bg-cream"
                         >
                           <Plus size={13} />
                         </button>

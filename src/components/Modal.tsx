@@ -51,7 +51,8 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
   return createPortal(
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4">
       <div
-        className="fade-in absolute inset-0 bg-ink/50 backdrop-blur-sm"
+        className="fade-in absolute inset-0 backdrop-blur-sm"
+        style={{ backgroundColor: "rgba(12,12,12,0.55)" }}
         onClick={onClose}
         aria-hidden="true"
       />

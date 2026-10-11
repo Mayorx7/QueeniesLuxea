@@ -43,7 +43,7 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
 
   return createPortal(
     <div className="fixed inset-0 z-[95]">
-      <div className="fade-in absolute inset-0 bg-ink/50" onClick={onClose} aria-hidden="true" />
+      <div className="fade-in absolute inset-0" style={{ backgroundColor: "rgba(12,12,12,0.55)" }} onClick={onClose} aria-hidden="true" />
       <div className="fade-in relative mx-auto mt-24 w-[92%] max-w-xl border border-line bg-ivory p-6 shadow-xl sm:mt-32">
         <button
           type="button"

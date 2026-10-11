@@ -35,7 +35,7 @@ export default function NewsletterForm({ variant = "light" }: NewsletterFormProp
         Email address
       </label>
       <div
-        className={`flex items-stretch border-b ${isDark ? "border-ivory/40" : "border-espresso/30"}`}
+        className={`flex flex-col gap-2 border-b sm:flex-row sm:items-stretch ${isDark ? "border-ivory/40" : "border-espresso/30"}`}
       >
         <input
           id="newsletter-email"
@@ -51,7 +51,7 @@ export default function NewsletterForm({ variant = "light" }: NewsletterFormProp
         />
         <button
           type="submit"
-          className={`eyebrow shrink-0 whitespace-nowrap px-1 text-xs ${
+          className={`eyebrow shrink-0 whitespace-nowrap px-3 py-2.5 text-xs sm:px-1 sm:py-0 ${
             isDark ? "text-gold-light" : "text-gold"
           } link-underline`}
         >

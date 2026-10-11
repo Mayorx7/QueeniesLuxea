@@ -1,4 +1,4 @@
-﻿import { type FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
@@ -104,13 +104,13 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(""); }}
-              className={inputCls + " pr-10"}
+              className={inputCls + " pr-12"}
             />
             <button
               type="button"
               onClick={() => setShowPw((s) => !s)}
               aria-label={showPw ? "Hide password" : "Show password"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-espresso-light hover:text-espresso"
+              className="absolute right-0 top-0 flex h-full min-h-[44px] w-11 items-center justify-center text-espresso-light hover:text-espresso"
             >
               {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>

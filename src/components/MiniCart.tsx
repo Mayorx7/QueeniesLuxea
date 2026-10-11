@@ -34,7 +34,7 @@ export default function MiniCart({ open, onClose }: MiniCartProps) {
 
   return createPortal(
     <div className="fixed inset-0 z-[95]">
-      <div className="fade-in absolute inset-0 bg-ink/50" onClick={onClose} aria-hidden="true" />
+      <div className="fade-in absolute inset-0" style={{ backgroundColor: "rgba(12,12,12,0.55)" }} onClick={onClose} aria-hidden="true" />
       <div
         ref={panelRef}
         role="dialog"
@@ -78,7 +78,7 @@ export default function MiniCart({ open, onClose }: MiniCartProps) {
                           type="button"
                           aria-label="Decrease quantity"
                           onClick={() => updateQuantity(line.productId, line.color, line.size, line.quantity - 1)}
-                          className="flex h-7 w-7 items-center justify-center hover:bg-cream"
+                          className="flex h-11 w-11 items-center justify-center hover:bg-cream"
                         >
                           <Minus size={12} />
                         </button>
@@ -87,7 +87,7 @@ export default function MiniCart({ open, onClose }: MiniCartProps) {
                           type="button"
                           aria-label="Increase quantity"
                           onClick={() => updateQuantity(line.productId, line.color, line.size, line.quantity + 1)}
-                          className="flex h-7 w-7 items-center justify-center hover:bg-cream"
+                          className="flex h-11 w-11 items-center justify-center hover:bg-cream"
                         >
                           <Plus size={12} />
                         </button>

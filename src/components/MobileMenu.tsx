@@ -45,7 +45,7 @@ export default function MobileMenu({ open, onClose, links }: MobileMenuProps) {
 
   return createPortal(
     <div className="fixed inset-0 z-[95] md:hidden">
-      <div className="fade-in absolute inset-0 bg-ink/50" onClick={onClose} aria-hidden="true" />
+      <div className="fade-in absolute inset-0" style={{ backgroundColor: "rgba(12,12,12,0.55)" }} onClick={onClose} aria-hidden="true" />
       <div
         role="dialog"
         aria-modal="true"

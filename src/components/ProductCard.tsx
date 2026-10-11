@@ -21,48 +21,48 @@ export default function ProductCard({ product, compact = false }: ProductCardPro
 
   return (
     <div className="group relative flex flex-col">
-      <Link to={`/product/${product.slug}`} className="relative block overflow-hidden bg-[var(--color-cream)]">
-        <div className={`w-full overflow-hidden ${compact ? "aspect-[3/4]" : "aspect-[4/5]"}`}>
-          <SmartImage
-            src={product.images[0]}
-            alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-          />
-        </div>
+      {/* Image wrapper — positioned so the quick-add button can sit outside the <a> */}
+      <div className="relative">
+        <Link to={`/product/${product.slug}`} className="relative block overflow-hidden bg-[var(--color-cream)]">
+          <div className={`w-full overflow-hidden ${compact ? "aspect-[3/4]" : "aspect-[4/5]"}`}>
+            <SmartImage
+              src={product.images[0]}
+              alt={product.name}
+              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+          </div>
 
-        {/* Badges */}
-        <div className="absolute left-2.5 top-2.5 flex flex-col gap-1">
-          {product.isNew && (
-            <span className="eyebrow bg-[var(--color-ink)] px-2 py-0.5 text-[0.6rem] text-[var(--color-ivory)]">
-              New
-            </span>
-          )}
-          {product.compareAtPrice && (
-            <span className="eyebrow bg-[var(--color-gold)] px-2 py-0.5 text-[0.6rem] text-[var(--color-ivory)]">
-              Sale
-            </span>
-          )}
-          {!product.inStock && (
-            <span className="eyebrow bg-[var(--color-ivory)]/90 px-2 py-0.5 text-[0.6rem] text-[var(--color-espresso)]">
-              Sold out
-            </span>
-          )}
-        </div>
+          {/* Badges */}
+          <div className="absolute left-2.5 top-2.5 flex flex-col gap-1">
+            {product.isNew && (
+              <span className="eyebrow bg-[var(--color-ink)] px-2 py-0.5 text-[0.6rem] text-[var(--color-ivory)]">
+                New
+              </span>
+            )}
+            {product.compareAtPrice && (
+              <span className="eyebrow bg-[var(--color-gold)] px-2 py-0.5 text-[0.6rem] text-[var(--color-ivory)]">
+                Sale
+              </span>
+            )}
+            {!product.inStock && (
+              <span className="eyebrow bg-[var(--color-ivory)]/90 px-2 py-0.5 text-[0.6rem] text-[var(--color-espresso)]">
+                Sold out
+              </span>
+            )}
+          </div>
+        </Link>
 
-        {/* Wishlist button — always visible, min 44×44 tap target */}
-        <div className="absolute right-2 top-2">
+        {/* Wishlist button — outside <Link> so touch events aren't swallowed by the anchor */}
+        <div className="absolute right-2 top-2 z-10">
           <WishlistButton product={product} />
         </div>
 
-        {/* Quick-add — visible on hover (desktop) + always visible on mobile */}
+        {/* Quick-add — outside <Link> so the button is independently tappable on mobile */}
         {product.inStock && (
           <button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              handleQuickAdd();
-            }}
-            className={`absolute bottom-2.5 right-2.5 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-ink)] text-[var(--color-ivory)] shadow-sm transition-all duration-300
+            onClick={handleQuickAdd}
+            className={`absolute bottom-2.5 right-2.5 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-ink)] text-[var(--color-ivory)] shadow-sm transition-all duration-300
               opacity-100 translate-y-0
               md:translate-y-2 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:focus-visible:translate-y-0 md:focus-visible:opacity-100`}
             aria-label={`Quick add ${product.name} to bag`}
@@ -70,7 +70,7 @@ export default function ProductCard({ product, compact = false }: ProductCardPro
             <Plus size={16} />
           </button>
         )}
-      </Link>
+      </div>
 
       {/* Product info */}
       <Link to={`/product/${product.slug}`} className="mt-2.5">

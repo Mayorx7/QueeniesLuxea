@@ -42,7 +42,7 @@ function Field({
   label: string; id: string; children: React.ReactNode; half?: boolean;
 }) {
   return (
-    <div className={half ? "col-span-1" : "col-span-2"}>
+    <div className={half ? "sm:col-span-1" : "col-span-1 sm:col-span-2"}>
       <label htmlFor={id} className="eyebrow mb-2 block text-espresso-light">
         {label}
       </label>
@@ -216,7 +216,7 @@ export default function CheckoutPage() {
           {/* Contact */}
           <section aria-labelledby="contact-heading">
             <h2 id="contact-heading" className="font-display text-2xl text-ink">Contact</h2>
-            <div className="mt-6 grid grid-cols-2 gap-4">
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="First name" id="firstName" half>
                 <input id="firstName" required value={form.firstName} onChange={set("firstName")} className={inputCls} />
               </Field>
@@ -235,7 +235,7 @@ export default function CheckoutPage() {
           {/* Shipping address */}
           <section aria-labelledby="address-heading" className="mt-10">
             <h2 id="address-heading" className="font-display text-2xl text-ink">Shipping Address</h2>
-            <div className="mt-6 grid grid-cols-2 gap-4">
+            <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <Field label="Street address" id="address">
                 <input id="address" required value={form.address} onChange={set("address")} className={inputCls} />
               </Field>
