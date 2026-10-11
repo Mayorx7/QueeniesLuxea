@@ -1,6 +1,5 @@
 import { createContext, useContext, useMemo, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Product } from "../types";
-import { PRODUCTS } from "../data/products";
 import { useProductListing } from "../hooks/useProductListing";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useToast } from "./ToastContext";
@@ -47,6 +46,8 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     const syncAndFetch = async () => {
       try {
         // If they had items in local guest cart, push them to DB, then clear local
+        if (!supabase) return;
+
         const currentLocalIds = localIdsRef.current;
         if (currentLocalIds.length > 0) {
           const insertPayload = currentLocalIds.map((id) => ({

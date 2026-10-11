@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Edit2, Eye, Trash2, Package } from "lucide-react";
+import { Edit2, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";

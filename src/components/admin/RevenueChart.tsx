@@ -32,8 +32,11 @@ export default function RevenueChart({ data, height = 200 }: RevenueChartProps) 
   // X-axis labels — show every nth label to avoid crowding
   const labelStep = Math.ceil(data.length / 7);
 
-  const formatMoney = (v: number) =>
-    v >= 1000 ? `$${(v / 1000).toFixed(0)}k` : `$${v}`;
+  const formatMoney = (v: number) => {
+    if (v >= 1_000_000) return `₦${(v / 1_000_000).toFixed(1)}M`;
+    if (v >= 1_000)     return `₦${(v / 1_000).toFixed(0)}k`;
+    return `₦${v}`;
+  };
 
   return (
     <div className="w-full overflow-x-auto">

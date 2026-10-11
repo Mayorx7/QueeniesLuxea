@@ -5,7 +5,6 @@ import {
   MapPin,
   Truck,
   ArrowLeft,
-  CheckCircle,
   RefreshCw,
   XCircle,
   AlertTriangle,
@@ -13,17 +12,12 @@ import {
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { formatPrice } from "../utils/format";
+import OrderStatusStepper, { type OrderStepStatus, STATUS_LABEL } from "../components/orders/OrderStatusStepper";
+import TransferPaymentPanel from "../components/orders/TransferPaymentPanel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type OrderStatus =
-  | "pending"
-  | "confirmed"
-  | "processing"
-  | "shipped"
-  | "delivered"
-  | "cancelled"
-  | "refunded";
+
 
 type OrderItemStatus =
   | "pending"
@@ -50,7 +44,7 @@ interface OrderItem {
 interface OrderDetail {
   id: string;
   order_number: string;
-  status: OrderStatus;
+  status: OrderStepStatus;
   payment_status: string;
   delivery_method: string;
   shipping_address: {
@@ -80,19 +74,9 @@ interface OrderWithItems {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const STATUS_STEPS: OrderStatus[] = ["confirmed", "processing", "shipped", "delivered"];
 
-const STATUS_LABEL: Record<OrderStatus, string> = {
-  pending:    "Pending",
-  confirmed:  "Confirmed",
-  processing: "Processing",
-  shipped:    "Shipped",
-  delivered:  "Delivered",
-  cancelled:  "Cancelled",
-  refunded:   "Refunded",
-};
 
-const STATUS_BADGE: Record<OrderStatus, string> = {
+const STATUS_BADGE: Record<OrderStepStatus, string> = {
   pending:    "bg-amber-50  text-amber-700  border border-amber-200",
   confirmed:  "bg-blue-50   text-blue-700   border border-blue-200",
   processing: "bg-purple-50 text-purple-700 border border-purple-200",
@@ -229,7 +213,6 @@ export default function OrderDetailPage() {
 
   const { order, items } = data;
   const isCancellable = order.status === "pending" || order.status === "confirmed";
-  const currentStepIndex = STATUS_STEPS.indexOf(order.status);
   const isTerminal = order.status === "cancelled" || order.status === "refunded";
 
   return (
@@ -264,55 +247,12 @@ export default function OrderDetailPage() {
       {/* ── Status tracker ──────────────────────────────────────────────── */}
       {!isTerminal && (
         <div className="rounded-2xl border border-line bg-ivory p-6">
-          <h3 className="mb-5 font-display text-base text-ink">Order Progress</h3>
-          <div className="flex items-center">
-            {STATUS_STEPS.map((step, i) => {
-              const done   = currentStepIndex >= 0 && i <= currentStepIndex;
-              const active = i === currentStepIndex;
-              return (
-                <div key={step} className="flex flex-1 items-center">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <div
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border-2 transition-colors ${
-                        done
-                          ? "border-gold bg-gold text-ivory"
-                          : "border-line bg-cream text-espresso-light"
-                      } ${active ? "ring-4 ring-gold/20" : ""}`}
-                    >
-                      {done ? (
-                        <CheckCircle size={14} />
-                      ) : (
-                        <span className="text-xs font-semibold">{i + 1}</span>
-                      )}
-                    </div>
-                    <span
-                      className={`text-[0.62rem] font-semibold uppercase tracking-wide ${
-                        done ? "text-gold" : "text-espresso-light"
-                      }`}
-                    >
-                      {STATUS_LABEL[step]}
-                    </span>
-                  </div>
-                  {i < STATUS_STEPS.length - 1 && (
-                    <div
-                      className={`h-0.5 flex-1 mx-2 transition-colors ${
-                        currentStepIndex > i ? "bg-gold" : "bg-line"
-                      }`}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Pending note */}
-          {order.status === "pending" && (
-            <p className="mt-5 rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-700">
-              Payment confirmation pending — your order will be confirmed shortly.
-            </p>
-          )}
+          <h3 className="mb-4 font-display text-base text-ink">Order Progress</h3>
+          <OrderStatusStepper status={order.status} />
         </div>
       )}
+
+      {order.payment_status !== "paid" && !isTerminal && <TransferPaymentPanel orderId={order.id} orderNumber={order.order_number} total={order.total} />}
 
       {/* ── Cancelled / Refunded banner ──────────────────────────────────── */}
       {isTerminal && (

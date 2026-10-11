@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Star } from "lucide-react";
+import { MessageCircle, Star } from "lucide-react";
 import Breadcrumbs from "../components/Breadcrumbs";
 import ImageGallery from "../components/ImageGallery";
 import QuantitySelector from "../components/QuantitySelector";
@@ -8,8 +8,10 @@ import WishlistButton from "../components/WishlistButton";
 import Accordion from "../components/Accordion";
 import ProductGrid from "../components/ProductGrid";
 import SectionHeading from "../components/SectionHeading";
+import ProductReviews from "../components/ProductReviews";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../utils/format";
+import { openWhatsAppOrder } from "../utils/whatsapp";
 import { supabase } from "../lib/supabase";
 import { mapDbRow } from "../hooks/useProductListing";
 import type { ColorEntry } from "../hooks/useProductListing";
@@ -261,6 +263,10 @@ export default function ProductDetailPage() {
     addItem(product, color, size, quantity, selectedVariant?.id);
   };
 
+  const handleWhatsAppOrder = () => {
+    openWhatsAppOrder([{ product, color, size, quantity }], product.price * quantity);
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
       <Breadcrumbs
@@ -379,6 +385,15 @@ export default function ProductDetailPage() {
                 <WishlistButton product={product} />
               </div>
             </div>
+            <button
+              type="button"
+              onClick={handleWhatsAppOrder}
+              disabled={!isVariantInStock}
+              className="mt-3 flex w-full items-center justify-center gap-2 border border-[#25D366] py-3 text-xs font-semibold uppercase tracking-wider text-[#128C7E] transition-colors hover:bg-[#25D366]/10 disabled:opacity-50"
+            >
+              <MessageCircle size={16} />
+              Order via WhatsApp
+            </button>
 
             <Accordion
               items={[
@@ -420,6 +435,8 @@ export default function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      <ProductReviews productId={product.id} productName={product.name} />
 
       {related.length > 0 && (
         <section className="mt-20 border-t border-line pt-20">

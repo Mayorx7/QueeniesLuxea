@@ -9,6 +9,9 @@ const ALL_CATEGORIES: ProductCategory[] = [
   "Shoes",
   "Beauty",
   "Accessories",
+  "Men",
+  "Women",
+  "Offers",
 ];
 
 const ALL_COLORS = [

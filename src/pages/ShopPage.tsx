@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { SlidersHorizontal, SearchX } from "lucide-react";
 import Breadcrumbs from "../components/Breadcrumbs";
 import ProductGrid from "../components/ProductGrid";
@@ -10,6 +11,10 @@ import { useProductListing } from "../hooks/useProductListing";
 
 export default function ShopPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const categoryParam = searchParams.get("category");
+  const filterParam = searchParams.get("filter");
+  
   const {
     products,
     totalCount,
@@ -26,13 +31,21 @@ export default function ShopPage() {
     error,
   } = useProductListing();
 
+  const getPageTitle = () => {
+    if (search) return `Results for "${search}"`;
+    if (categoryParam) return categoryParam;
+    if (filterParam === "new") return "New Arrivals";
+    if (filterParam === "sale") return "Sale";
+    return "Shop All";
+  };
+
   return (
     <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
       <Breadcrumbs items={[{ label: "Home", to: "/" }, { label: "Shop" }]} />
 
       <div className="mb-10 max-w-2xl">
         <h1 className="font-display text-4xl text-ink sm:text-5xl">
-          {search ? `Results for "${search}"` : "Shop All"}
+          {getPageTitle()}
         </h1>
         <p className="mt-3 text-sm text-espresso-light">
           Considered pieces across dresses, handbags, jewelry, and more — each selected for how it wears, not just how it photographs.

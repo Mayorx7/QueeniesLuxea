@@ -1,4 +1,4 @@
-import { Menu, Search, Bell, LogOut } from "lucide-react";
+import { Menu, Search, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -28,20 +28,13 @@ export default function DashboardHeader({ onMenuClick, title = "Dashboard" }: Da
       </div>
 
       <div className="flex items-center gap-4 sm:gap-6">
-        <button 
+        <Link
+          to="/search"
           className="p-2 text-espresso-light transition-colors hover:text-ink"
           aria-label="Search"
         >
           <Search size={20} />
-        </button>
-        
-        <button 
-          className="relative p-2 text-espresso-light transition-colors hover:text-ink"
-          aria-label="Notifications"
-        >
-          <Bell size={20} />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-gold"></span>
-        </button>
+        </Link>
 
         <div className="h-6 w-px bg-line hidden sm:block"></div>
 

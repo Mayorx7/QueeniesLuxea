@@ -1,5 +1,6 @@
 import { ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { formatPrice } from "../../utils/format";
 
 export interface Order {
   id: string;
@@ -7,6 +8,7 @@ export interface Order {
   date: string;
   products: number;
   total: number;
+  currency?: string;
   status: "pending" | "confirmed" | "processing" | "shipped" | "delivered" | "cancelled" | "refunded";
 }
 
@@ -40,7 +42,7 @@ export default function OrderItem({ order }: OrderItemProps) {
         <td className="py-4 pl-4 font-medium text-ink sm:pl-6">{order.order_number || `#${order.id.slice(0, 8)}`}</td>
         <td className="py-4 text-espresso-light">{order.date}</td>
         <td className="py-4 text-espresso-light">{order.products} items</td>
-        <td className="py-4 text-ink">${order.total.toFixed(2)}</td>
+        <td className="py-4 text-ink">{formatPrice(order.total, order.currency)}</td>
         <td className="py-4">
           <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${getStatusColor(order.status)}`}>
             {order.status}
@@ -66,7 +68,7 @@ export default function OrderItem({ order }: OrderItemProps) {
           </span>
         </div>
         <div className="text-sm text-espresso-light mb-4">
-          {order.date} &middot; {order.products} items &middot; <span className="text-ink font-medium">${order.total.toFixed(2)}</span>
+          {order.date} &middot; {order.products} items &middot; <span className="text-ink font-medium">{formatPrice(order.total, order.currency)}</span>
         </div>
         <Link 
           to={`/account/orders/${order.id}`}

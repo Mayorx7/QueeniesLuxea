@@ -2,7 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface WelcomeSectionProps {
-  customerName: string;
+  customerName?: string;
 }
 
 export default function WelcomeSection({ customerName }: WelcomeSectionProps) {
@@ -13,7 +13,7 @@ export default function WelcomeSection({ customerName }: WelcomeSectionProps) {
       
       <div className="relative z-10">
         <h2 className="font-display text-2xl text-ink sm:text-3xl">
-          Welcome back, {customerName}
+          Welcome back{customerName ? `, ${customerName}` : ""}
         </h2>
         <p className="mt-2 text-espresso-light max-w-xl">
           Here's what's happening with your account today. View your latest orders, 

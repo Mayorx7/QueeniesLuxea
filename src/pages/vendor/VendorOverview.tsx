@@ -31,13 +31,13 @@ export default function VendorOverview() {
 
     const fetchDashboardData = async () => {
       // 1. Fetch aggregate stats via RPC
-      const { data: statsData, error: statsError } = await supabase.rpc("vendor_get_stats");
+      const { data: statsData, error: statsError } = await supabase!.rpc("vendor_get_stats");
       if (!statsError && statsData) {
         setStats(statsData as VendorStats);
       }
 
       // 2. Fetch recent orders for the table
-      const { data: ordersData, error: ordersError } = await supabase
+      const { data: ordersData, error: ordersError } = await supabase!
         .from("order_items")
         .select(`
           id, order_id, product_name, product_image_url, color, size,

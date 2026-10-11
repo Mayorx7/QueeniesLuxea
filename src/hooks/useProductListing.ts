@@ -64,13 +64,19 @@ export function mapDbRow(row: Record<string, unknown>): Product {
     .map((c) => ({ id: (c as { id?: string }).id ?? c.name ?? "", name: c.name ?? "", hex: c.hex ?? c.name ?? "" }));
 
   const slug = (row.slug as string | null) || (row.id as string);
+  const storedCategories = Array.isArray(row.categories)
+    ? row.categories.filter((value): value is string => typeof value === "string")
+    : [];
+  const primaryCategory = ((row.category as ProductCategory | null) ?? storedCategories[0] ?? "Offers") as ProductCategory;
+  const categories = Array.from(new Set([primaryCategory, ...storedCategories])) as ProductCategory[];
 
   return {
     id: row.id as string,
     vendorId: row.vendor_id as string,
     name: row.name as string,
     slug,
-    category: row.category as ProductCategory,
+    category: primaryCategory,
+    categories,
     price: row.price as number,
     compareAtPrice: (row.compare_at_price as number | null) ?? undefined,
     description: (row.description as string) || "",
@@ -92,6 +98,8 @@ export function useProductListing(fixedCategory?: ProductCategory) {
   const [searchParams] = useSearchParams();
   const search = searchParams.get("search")?.toLowerCase() ?? "";
   const isNewFilter = searchParams.get("filter") === "new";
+  const isSaleFilter = searchParams.get("filter") === "sale";
+  const categoryParam = searchParams.get("category") as ProductCategory | null;
 
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,7 +130,7 @@ export function useProductListing(fixedCategory?: ProductCategory) {
         const { data, error: err } = await supabase
           .from("products")
           .select(`
-            id, vendor_id, name, slug, description, category, price, compare_at_price,
+            id, vendor_id, name, slug, description, category, categories, price, compare_at_price,
             sale_enabled, tags, sizes, colors, status, is_featured, created_at, sku,
             product_images ( url, display_order ),
             product_variants ( id, stock )
@@ -171,21 +179,30 @@ export function useProductListing(fixedCategory?: ProductCategory) {
     let list = allProducts.slice();
 
     if (fixedCategory) {
-      list = list.filter((p) => p.category === fixedCategory);
+      list = list.filter((p) => (p.categories ?? [p.category]).includes(fixedCategory));
+    }
+    if (categoryParam) {
+      list = list.filter((p) => (p.categories ?? [p.category]).includes(categoryParam));
     }
     if (search) {
       list = list.filter(
         (p) =>
           p.name.toLowerCase().includes(search) ||
           p.category.toLowerCase().includes(search) ||
+          (p.categories ?? []).some((category) => category.toLowerCase().includes(search)) ||
           p.tags.some((t) => t.toLowerCase().includes(search))
       );
     }
     if (isNewFilter) {
       list = list.filter((p) => p.isNew);
     }
+    if (isSaleFilter) {
+      list = list.filter((p) => p.compareAtPrice !== undefined && p.compareAtPrice > p.price);
+    }
     if (filters.categories.length > 0) {
-      list = list.filter((p) => filters.categories.includes(p.category));
+      list = list.filter((p) =>
+        (p.categories ?? [p.category]).some((category) => filters.categories.includes(category))
+      );
     }
     if (filters.colors.length > 0) {
       list = list.filter((p) => p.colors.some((c) => filters.colors.includes(c)));
@@ -216,7 +233,7 @@ export function useProductListing(fixedCategory?: ProductCategory) {
     }
 
     return list;
-  }, [allProducts, fixedCategory, search, isNewFilter, filters, sort]);
+  }, [allProducts, fixedCategory, search, isNewFilter, isSaleFilter, categoryParam, filters, sort]);
 
   const visible = filtered.slice(0, visibleCount);
   const hasMore = visibleCount < filtered.length;

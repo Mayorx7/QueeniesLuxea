@@ -1,6 +1,17 @@
 import { Save, Image as ImageIcon } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { supabase } from "../../lib/supabase";
 
 export default function VendorSettingsPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [bank, setBank] = useState({ bank_name: "", account_name: "", account_number: "", payment_instructions: "", payment_deadline_hours: "" });
+  const [bankMessage, setBankMessage] = useState("");
+  useEffect(() => { if (!supabase || !user) return; void supabase.from("vendor_payment_settings").select("*").eq("vendor_id", user.id).maybeSingle().then(({ data }) => { if (data) setBank({ bank_name: data.bank_name, account_name: data.account_name, account_number: data.account_number, payment_instructions: data.payment_instructions ?? "", payment_deadline_hours: data.payment_deadline_hours?.toString() ?? "" }); }); }, [user]);
+  const saveBank = async () => { if (!supabase || !user) return; const { error } = await supabase.from("vendor_payment_settings").upsert({ vendor_id: user.id, bank_name: bank.bank_name, account_name: bank.account_name, account_number: bank.account_number, payment_instructions: bank.payment_instructions || null, payment_deadline_hours: bank.payment_deadline_hours ? Number(bank.payment_deadline_hours) : null, updated_at: new Date().toISOString() }); if (error) { setBankMessage(error.message); return; } navigate("/vendor/products", { replace: true, state: { message: "Bank details saved. Add or review your products next." } }); };
+  const bankInput = "w-full rounded-lg border border-line bg-cream/30 py-2.5 px-4 text-sm text-ink outline-none transition-colors focus:border-champagne";
   return (
     <div className="space-y-6 pb-10 max-w-4xl">
       <div>
@@ -91,6 +102,20 @@ export default function VendorSettingsPage() {
               />
             </div>
           </div>
+        </div>
+
+        <div className="rounded-xl border border-line bg-ivory p-6">
+          <h3 className="font-display text-lg text-ink mb-1">Bank Transfer Details</h3>
+          <p className="text-sm text-espresso-light mb-6">These details are securely copied into each new invoice. They are never hard-coded for customers.</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="text-sm text-espresso-light">Bank name<input required value={bank.bank_name} onChange={(e) => setBank({ ...bank, bank_name: e.target.value })} className={bankInput} /></label>
+            <label className="text-sm text-espresso-light">Account name<input required value={bank.account_name} onChange={(e) => setBank({ ...bank, account_name: e.target.value })} className={bankInput} /></label>
+            <label className="text-sm text-espresso-light">Account number<input required value={bank.account_number} onChange={(e) => setBank({ ...bank, account_number: e.target.value })} className={bankInput} /></label>
+            <label className="text-sm text-espresso-light">Payment deadline in hours (optional)<input type="number" min="1" max="720" value={bank.payment_deadline_hours} onChange={(e) => setBank({ ...bank, payment_deadline_hours: e.target.value })} className={bankInput} /></label>
+          </div>
+          <label className="mt-4 block text-sm text-espresso-light">Payment instructions<textarea value={bank.payment_instructions} onChange={(e) => setBank({ ...bank, payment_instructions: e.target.value })} className={bankInput} /></label>
+          <button type="button" onClick={() => void saveBank()} className="mt-5 inline-flex items-center gap-2 rounded-lg bg-ink px-5 py-2.5 text-sm font-medium text-ivory"><Save size={16} />Save bank details</button>
+          {bankMessage && <p className="mt-3 text-sm text-espresso-light">{bankMessage}</p>}
         </div>
       </div>
 

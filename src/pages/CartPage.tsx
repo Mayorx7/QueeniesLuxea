@@ -1,11 +1,12 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { Minus, Plus, X, ShoppingBag } from "lucide-react";
+import { Minus, Plus, X, ShoppingBag, MessageCircle } from "lucide-react";
 import Breadcrumbs from "../components/Breadcrumbs";
 import SmartImage from "../components/SmartImage";
 import EmptyState from "../components/EmptyState";
 import { useCart, FREE_SHIPPING_THRESHOLD } from "../context/CartContext";
 import { formatPrice } from "../utils/format";
+import { openWhatsAppOrder } from "../utils/whatsapp";
 
 const VALID_PROMO_CODES: Record<string, number> = {
   QUEENSLUXEA10: 0.1,
@@ -189,6 +190,7 @@ export default function CartPage() {
             >
               Checkout
             </Link>
+            <button type="button" onClick={() => openWhatsAppOrder(lines, finalTotal)} className="mt-3 flex w-full items-center justify-center gap-2 border border-[#25D366] py-4 text-xs font-semibold uppercase tracking-wider text-[#128C7E] transition-colors hover:bg-[#25D366]/10"><MessageCircle size={16} />Order via WhatsApp</button>
           </div>
         </div>
       )}

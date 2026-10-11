@@ -24,6 +24,8 @@ import CollectionsPage from "./pages/CollectionsPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import CookiePolicyPage from "./pages/CookiePolicyPage";
+import OffersPage from "./pages/OffersPage";
+import OfferDetailPage from "./pages/OfferDetailPage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
@@ -31,6 +33,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import AuthCallbackPage from "./pages/AuthCallbackPage";
 import OrdersPage from "./pages/OrdersPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
+import InvoicePage from "./pages/InvoicePage";
 import AddressesPage from "./pages/AddressesPage";
 import NotFoundPage from "./pages/NotFoundPage";
 
@@ -55,6 +58,8 @@ import VendorDashboardLayout from "./layouts/VendorDashboardLayout";
 import VendorOverview from "./pages/vendor/VendorOverview";
 import VendorProductsPage from "./pages/vendor/VendorProductsPage";
 import VendorAddProductPage from "./pages/vendor/VendorAddProductPage";
+import VendorOffersPage from "./pages/vendor/VendorOffersPage";
+import VendorOfferFormPage from "./pages/vendor/VendorOfferFormPage";
 import VendorOrdersPage from "./pages/vendor/VendorOrdersPage";
 import VendorCustomersPage from "./pages/vendor/VendorCustomersPage";
 import VendorInventoryPage from "./pages/vendor/VendorInventoryPage";
@@ -62,6 +67,7 @@ import VendorAnalyticsPage from "./pages/vendor/VendorAnalyticsPage";
 import VendorEarningsPage from "./pages/vendor/VendorEarningsPage";
 import VendorSettingsPage from "./pages/vendor/VendorSettingsPage";
 import VendorProfilePage from "./pages/vendor/VendorProfilePage";
+import VendorPaymentsPage from "./pages/vendor/VendorPaymentsPage";
 
 export default function App() {
   return (
@@ -81,10 +87,13 @@ export default function App() {
                 <Route path="/lookbook" element={<LookbookPage />} />
                 <Route path="/wishlist" element={<WishlistPage />} />
                 <Route path="/cart" element={<CartPage />} />
+                <Route path="/offers" element={<OffersPage />} />
+                <Route path="/offers/:slug" element={<OfferDetailPage />} />
                 
                 <Route path="/search" element={<SearchResultsPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
                 <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
+                <Route path="/invoice/:invoiceId" element={<InvoicePage />} />
                 
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/faq" element={<FAQPage />} />
@@ -138,7 +147,11 @@ export default function App() {
                 <Route path="products" element={<VendorProductsPage />} />
                 <Route path="products/add" element={<VendorAddProductPage />} />
                 <Route path="products/:id/edit" element={<VendorAddProductPage />} />
+                <Route path="offers" element={<VendorOffersPage />} />
+                <Route path="offers/add" element={<VendorOfferFormPage />} />
+                <Route path="offers/:id/edit" element={<VendorOfferFormPage />} />
                 <Route path="orders" element={<VendorOrdersPage />} />
+                <Route path="payments" element={<VendorPaymentsPage />} />
                 <Route path="customers" element={<VendorCustomersPage />} />
                 <Route path="inventory" element={<VendorInventoryPage />} />
                 <Route path="analytics" element={<VendorAnalyticsPage />} />

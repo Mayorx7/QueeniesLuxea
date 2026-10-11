@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Tag } from "lucide-react";
 import SmartImage from "../components/SmartImage";
 import SectionHeading from "../components/SectionHeading";
 import ProductGrid from "../components/ProductGrid";
@@ -10,9 +10,12 @@ import MobileCategoryScroll from "../components/MobileCategoryScroll";
 import NewsletterForm from "../components/NewsletterForm";
 import { CATEGORIES } from "../data/products";
 import { useProductListing } from "../hooks/useProductListing";
+import { useFeaturedOffers } from "../hooks/useOffers";
 import { img } from "../utils/image";
 export default function HomePage() {
-  const { products } = useProductListing();  const newArrivals = products.filter((p) => p.isNew).slice(0, 8);
+  const { products } = useProductListing();
+  const { offers: featuredOffers } = useFeaturedOffers(4);
+  const newArrivals = products.filter((p) => p.isNew).slice(0, 8);
   const featured = products.filter((p) => p.isFeatured).slice(0, 8);
   const bestSellers = products.filter((p) => p.rating >= 4.7).slice(0, 6);
 
@@ -79,6 +82,74 @@ export default function HomePage() {
           desktopColumns={4}
         />
       </section>
+
+      {/* ── FEATURED OFFERS ───────────────────────────────────────── */}
+      {featuredOffers.length > 0 && (
+        <section className="py-8 md:mx-auto md:max-w-7xl md:px-8 md:py-16">
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-8">
+            <div>
+              <p className="eyebrow mb-2 text-[var(--color-gold)]">Special Deals</p>
+              <h2 className="font-display text-2xl text-ink sm:text-3xl">Featured Offers</h2>
+            </div>
+            <Link to="/offers" className="eyebrow link-underline text-[var(--color-espresso)]">
+              View All Offers
+            </Link>
+          </div>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {featuredOffers.map((offer) => (
+              <Link
+                key={offer.id}
+                to={`/offers/${offer.slug}`}
+                className="group block rounded-xl border border-line bg-ivory overflow-hidden hover:border-espresso-light transition-colors"
+              >
+                <div className="aspect-[4/3] overflow-hidden bg-cream relative">
+                  {offer.images[0]?.url ? (
+                    <SmartImage
+                      src={offer.images[0].url}
+                      alt={offer.title}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <Tag size={48} className="text-espresso-light" strokeWidth={1} />
+                    </div>
+                  )}
+                  <div className="absolute top-3 left-3">
+                    <span className="inline-flex items-center rounded-full bg-ink/80 px-3 py-1.5 text-[0.65rem] font-semibold uppercase tracking-wide text-ivory backdrop-blur-sm">
+                      {offer.offerType === "fyb_campus" ? "FYB & Campus" : offer.offerType === "wholesale" ? "Wholesale" : "Special Promo"}
+                    </span>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-display text-base text-ink mb-2 group-hover:text-gold transition-colors line-clamp-1">
+                    {offer.title}
+                  </h3>
+                  {offer.offerPrice && (
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-lg font-bold text-ink">
+                        {new Intl.NumberFormat("en-NG", {
+                          style: "currency",
+                          currency: "NGN",
+                          minimumFractionDigits: 0,
+                        }).format(offer.offerPrice)}
+                      </span>
+                      {offer.originalPrice && (
+                        <span className="text-sm line-through text-espresso-light">
+                          {new Intl.NumberFormat("en-NG", {
+                            style: "currency",
+                            currency: "NGN",
+                            minimumFractionDigits: 0,
+                          }).format(offer.originalPrice)}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── FEATURED CATEGORIES ───────────────────────────────────── */}
       {/*  Mobile: hidden — category scroll handles this on mobile    */}

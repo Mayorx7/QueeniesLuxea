@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from "react";
-import type { CartItem, Product } from "../types";
+import type { CartItem, Offer, Product } from "../types";
 import { PRODUCTS } from "../data/products";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useToast } from "./ToastContext";
@@ -22,6 +22,7 @@ interface CartContextValue {
   shipping: number;
   total: number;
   addItem: (product: Product, color: string, size: string, quantity?: number, variantId?: string) => void;
+  addOffer: (offer: Offer, price: number, quantity: number, customization?: string) => void;
   removeItem: (productId: string, color: string, size: string) => void;
   updateQuantity: (productId: string, color: string, size: string, quantity: number) => void;
   clearCart: () => void;
@@ -93,10 +94,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = (product: Product, color: string, size: string, quantity = 1, variantId?: string) => {
     // Ensure the product is always in the cache when added
-    if (!isStaticId(product.id)) {
-      setProductCache((prev) => ({ ...prev, [product.id]: product }));
-      fetchedIdsRef.current.add(product.id);
-    }
+    setProductCache((prev) => ({ ...prev, [product.id]: product }));
+    fetchedIdsRef.current.add(product.id);
 
     setItems((prev) => {
       const existing = prev.find((i) => sameLine(i, product.id, color, size));
@@ -110,6 +109,30 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return [...prev, { productId: product.id, quantity, color, size, variantId }];
     });
     showToast(`Added ${product.name} to your bag`);
+  };
+
+  const addOffer = (offer: Offer, price: number, quantity: number, customization = "") => {
+    const product: Product = {
+      id: `offer:${offer.id}`,
+      vendorId: offer.vendorId,
+      name: offer.title,
+      slug: `offer-${offer.slug}`,
+      category: "Offers",
+      price,
+      description: offer.description ?? "",
+      details: [],
+      colors: ["Offer"],
+      sizes: [customization || "Standard"],
+      images: offer.images.map((image) => image.url),
+      rating: 0,
+      reviewCount: 0,
+      isNew: false,
+      isFeatured: offer.isFeatured,
+      inStock: true,
+      tags: offer.tags,
+      sku: `OFFER-${offer.id}`,
+    };
+    addItem(product, "Offer", customization || "Standard", quantity);
   };
 
   const removeItem = (productId: string, color: string, size: string) => {
@@ -155,7 +178,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ items, lines, itemCount, subtotal, shipping, total, addItem, removeItem, updateQuantity, clearCart }}
+      value={{ items, lines, itemCount, subtotal, shipping, total, addItem, addOffer, removeItem, updateQuantity, clearCart }}
     >
       {children}
     </CartContext.Provider>

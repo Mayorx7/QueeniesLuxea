@@ -58,7 +58,8 @@ export default function AdminProductsPage() {
         const sorted = [...imgs].sort((a, b) => a.display_order - b.display_order);
         const variants = (row.product_variants as { stock: number }[] | null) ?? [];
         const totalStock = variants.reduce((sum, v) => sum + (v.stock ?? 0), 0);
-        const v = row.vendor as { first_name: string | null; last_name: string | null } | null;
+        const vendorData = Array.isArray(row.vendor) ? row.vendor[0] : row.vendor;
+        const v = vendorData as unknown as { first_name: string | null; last_name: string | null } | null;
         return {
           id:       row.id,
           name:     row.name,

@@ -1,12 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
-import { X } from "lucide-react";
+import { X, ChevronDown, ChevronUp } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 interface NavLink {
   label: string;
   to: string;
+  subcategories?: { label: string; to: string }[];
 }
 
 interface MobileMenuProps {
@@ -19,6 +20,7 @@ export default function MobileMenu({ open, onClose, links }: MobileMenuProps) {
   const location = useLocation();
   const closeRef = useRef<HTMLButtonElement>(null);
   const { user, loading } = useAuth();
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   useEffect(() => {
     onClose();
@@ -59,13 +61,44 @@ export default function MobileMenu({ open, onClose, links }: MobileMenuProps) {
         </div>
         <nav className="flex flex-1 flex-col gap-1 px-6 py-6" aria-label="Mobile">
           {links.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className="border-b border-line py-4 font-display text-xl text-ink"
-            >
-              {link.label}
-            </Link>
+            <div key={link.to}>
+              {link.subcategories ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedSection(expandedSection === link.label ? null : link.label)}
+                    className="flex w-full items-center justify-between border-b border-line py-4 font-display text-xl text-ink"
+                  >
+                    {link.label}
+                    {expandedSection === link.label ? (
+                      <ChevronUp size={20} className="text-[var(--color-gold)]" />
+                    ) : (
+                      <ChevronDown size={20} className="text-[var(--color-espresso-light)]" />
+                    )}
+                  </button>
+                  {expandedSection === link.label && (
+                    <div className="pl-4">
+                      {link.subcategories.map((sub) => (
+                        <Link
+                          key={sub.to}
+                          to={sub.to}
+                          className="block border-b border-line py-3 text-base text-[var(--color-espresso)] hover:text-[var(--color-gold)] transition-colors"
+                        >
+                          {sub.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <Link
+                  to={link.to}
+                  className="block border-b border-line py-4 font-display text-xl text-ink"
+                >
+                  {link.label}
+                </Link>
+              )}
+            </div>
           ))}
           {!loading && !user && (
             <>

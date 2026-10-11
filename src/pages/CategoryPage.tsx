@@ -14,11 +14,16 @@ import { ALL_CATEGORIES } from "../components/ProductFilters";
 const CATEGORY_BLURBS: Record<ProductCategory, string> = {
   Dresses: "Signature silhouettes for the moments that matter, cut to move.",
   Tops: "Layering pieces built from natural fibers that earn their keep.",
+  Bottoms: "Versatile skirts, trousers, and more for polished everyday dressing.",
+  Outerwear: "Layers made to complete a look in every season.",
   Handbags: "Structured leather goods, made to be carried for years.",
   Jewelry: "Fine gold-vermeil pieces for daily wear and evening alike.",
   Shoes: "Heels and flats built on a foundation of real craftsmanship.",
   Beauty: "Small rituals in fragrance and skincare, composed with intention.",
   Accessories: "The finishing details — scarves, eyewear, and beyond.",
+  Men: "Refined essentials and tailored menswear for the modern gentleman.",
+  Women: "Signature silhouettes and timeless elegance for every occasion.",
+  Offers: "Exclusive deals, FYB outfits, and wholesale bundles.",
 };
 
 export default function CategoryPage() {

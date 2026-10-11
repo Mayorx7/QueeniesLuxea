@@ -380,7 +380,7 @@ begin
     auth.uid(),
     public.generate_order_number(),
     'pending',
-    case when payment_reference_input is not null then 'paid' else 'pending' end,
+    (case when payment_reference_input is not null then 'paid' else 'pending' end)::public.payment_status,
     delivery_method_input::public.delivery_method,
     shipping_address_input,
     coalesce(billing_address_input, shipping_address_input),

@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type ChangeEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShoppingBag, Lock, ChevronDown, ChevronUp } from "lucide-react";
+import { ShoppingBag, Building2, ChevronDown, ChevronUp, MessageCircle } from "lucide-react";
 import Breadcrumbs from "../components/Breadcrumbs";
 import SmartImage from "../components/SmartImage";
 import EmptyState from "../components/EmptyState";
@@ -8,8 +8,7 @@ import { useCart, FREE_SHIPPING_THRESHOLD } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { formatPrice } from "../utils/format";
-
-type DeliveryMethod = "standard" | "express" | "overnight";
+import { openWhatsAppOrder } from "../utils/whatsapp";
 
 interface ContactForm {
   firstName: string;
@@ -19,29 +18,23 @@ interface ContactForm {
   address: string;
   city: string;
   state: string;
-  postcode: string;
   country: string;
-  delivery: DeliveryMethod;
-  cardName: string;
-  cardNumber: string;
-  cardExpiry: string;
-  cardCvc: string;
 }
-
-const DELIVERY_OPTIONS: { id: DeliveryMethod; label: string; description: string; price: number }[] = [
-  { id: "standard", label: "Standard", description: "5-8 business days", price: 0 },
-  { id: "express",  label: "Express",  description: "2-3 business days", price: 18 },
-  { id: "overnight",label: "Overnight",description: "Next business day", price: 38 },
-];
 
 const COUNTRIES = [
   "Nigeria", "United States", "United Kingdom", "Canada", "Australia",
   "France", "Germany", "Italy", "Japan", "Netherlands", "Spain",
 ];
 
-// Placeholder vendor UUID used for demo/static products that have no real DB vendor.
-// Replace with an actual vendor profile UUID once real products are seeded from DB.
-const DEMO_VENDOR_ID = "00000000-0000-0000-0000-000000000001";
+const NIGERIAN_STATES = [
+  "Abia", "Adamawa", "Akwa Ibom", "Anambra", "Bauchi", "Bayelsa", "Benue", "Borno",
+  "Cross River", "Delta", "Ebonyi", "Edo", "Ekiti", "Enugu", "Federal Capital Territory",
+  "Gombe", "Imo", "Jigawa", "Kaduna", "Kano", "Katsina", "Kebbi", "Kogi", "Kwara",
+  "Lagos", "Nasarawa", "Niger", "Ogun", "Ondo", "Osun", "Oyo", "Plateau", "Rivers",
+  "Sokoto", "Taraba", "Yobe", "Zamfara",
+];
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function Field({
   label, id, children, half,
@@ -77,17 +70,10 @@ export default function CheckoutPage() {
     address: "",
     city: "",
     state: "",
-    postcode: "",
     country: "Nigeria",
-    delivery: "standard",
-    cardName: "",
-    cardNumber: "",
-    cardExpiry: "",
-    cardCvc: "",
   });
 
-  const selectedDelivery = DELIVERY_OPTIONS.find((d) => d.id === form.delivery)!;
-  const deliveryCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : selectedDelivery.price;
+  const deliveryCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 14;
   const orderTotal = subtotal + deliveryCost;
 
   const set = (field: keyof ContactForm) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
@@ -105,6 +91,14 @@ export default function CheckoutPage() {
       setApiError("Service unavailable. Please try again later.");
       return;
     }
+    const unsupportedLine = lines.find((line) => {
+      const productId = line.product.id.startsWith("offer:") ? line.product.id.slice(6) : line.product.id;
+      return !UUID_PATTERN.test(productId) || !line.product.vendorId || !UUID_PATTERN.test(line.product.vendorId);
+    });
+    if (unsupportedLine) {
+      setApiError(`“${unsupportedLine.product.name}” is sample catalogue data and cannot be ordered yet. Add it as a vendor product in Supabase before accepting transfer orders.`);
+      return;
+    }
 
     setSubmitting(true);
 
@@ -115,15 +109,14 @@ export default function CheckoutPage() {
         address:    form.address,
         city:       form.city,
         state:      form.state,
-        postcode:   form.postcode,
         country:    form.country,
         phone:      form.phone,
       };
 
       const cartItems = lines.map((line) => ({
-        product_id:        line.product.id,
+        product_id:        line.product.id.startsWith("offer:") ? null : line.product.id,
         variant_id:        line.variantId ?? null,
-        vendor_id:         line.product.vendorId ?? DEMO_VENDOR_ID,
+        vendor_id:         line.product.vendorId!,
         product_name:      line.product.name,
         product_image_url: line.product.images?.[0] ?? null,
         sku:               line.product.sku ?? null,
@@ -137,28 +130,22 @@ export default function CheckoutPage() {
         cart_items:              cartItems,
         shipping_address_input:  shippingAddress,
         billing_address_input:   null,
-        delivery_method_input:   form.delivery,
+        delivery_method_input:   "standard",
         coupon_code_input:       null,
-        customer_note_input:     null,
+        customer_note_input:     "Payment method: bank transfer",
         payment_reference_input: null,
       });
 
       if (error) throw error;
 
       clearCart();
-      navigate("/order-confirmation", {
-        state: {
-          orderNumber: order.order_number,
-          email:       form.email || user.email,
-          name:        `${form.firstName} ${form.lastName}`.trim(),
-          address:     `${form.address}, ${form.city}, ${form.state} ${form.postcode}, ${form.country}`,
-          delivery:    selectedDelivery.label,
-          total:       order.total,
-          itemCount:   lines.reduce((s, l) => s + l.quantity, 0),
-        },
-      });
+      // The order is pending until its bank transfer has been verified.
+      // Take the customer straight to its invoice and payment instructions.
+      navigate(`/account/orders/${order.id}`, { replace: true });
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      const message = typeof err === "object" && err && "message" in err && typeof (err as { message: unknown }).message === "string"
+        ? (err as { message: string }).message
+        : "Something went wrong. Please try again.";
       setApiError(message);
     } finally {
       setSubmitting(false);
@@ -240,7 +227,7 @@ export default function CheckoutPage() {
                 <input id="email" type="email" required value={form.email} onChange={set("email")} className={inputCls} />
               </Field>
               <Field label="Phone" id="phone">
-                <input id="phone" type="tel" value={form.phone} onChange={set("phone")} className={inputCls} />
+                <input id="phone" type="tel" placeholder="WhatsApp number" value={form.phone} onChange={set("phone")} className={inputCls} />
               </Field>
             </div>
           </section>
@@ -256,12 +243,12 @@ export default function CheckoutPage() {
                 <input id="city" required value={form.city} onChange={set("city")} className={inputCls} />
               </Field>
               <Field label="State / Region" id="state" half>
-                <input id="state" value={form.state} onChange={set("state")} className={inputCls} />
+                 <select id="state" required value={form.state} onChange={set("state")} className={inputCls}>
+                   <option value="" disabled>Select your state</option>
+                   {NIGERIAN_STATES.map((state) => <option key={state} value={state}>{state}</option>)}
+                 </select>
               </Field>
-              <Field label="Postcode" id="postcode" half>
-                <input id="postcode" required value={form.postcode} onChange={set("postcode")} className={inputCls} />
-              </Field>
-              <Field label="Country" id="country" half>
+               <Field label="Country" id="country">
                 <select id="country" value={form.country} onChange={set("country")} className={inputCls}>
                   {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -269,84 +256,13 @@ export default function CheckoutPage() {
             </div>
           </section>
 
-          {/* Delivery */}
-          <section aria-labelledby="delivery-heading" className="mt-10">
-            <h2 id="delivery-heading" className="font-display text-2xl text-ink">Delivery</h2>
-            <div className="mt-6 flex flex-col divide-y divide-line border border-line">
-              {DELIVERY_OPTIONS.map((opt) => {
-                const cost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : opt.price;
-                return (
-                  <label
-                    key={opt.id}
-                    htmlFor={`delivery-${opt.id}`}
-                    className={`flex cursor-pointer items-center gap-4 px-5 py-4 transition-colors ${
-                      form.delivery === opt.id ? "bg-cream" : "hover:bg-cream/50"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      id={`delivery-${opt.id}`}
-                      name="delivery"
-                      value={opt.id}
-                      checked={form.delivery === opt.id}
-                      onChange={set("delivery")}
-                      className="accent-espresso"
-                    />
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold text-ink">{opt.label}</p>
-                      <p className="text-xs text-espresso-light">{opt.description}</p>
-                    </div>
-                    <span className="text-sm text-espresso">
-                      {cost === 0 ? "Complimentary" : formatPrice(cost)}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </section>
-
           {/* Payment */}
           <section aria-labelledby="payment-heading" className="mt-10">
-            <h2 id="payment-heading" className="font-display text-2xl text-ink">Payment</h2>
-            <p className="mt-1 text-xs text-espresso-light flex items-center gap-1.5">
-              <Lock size={12} aria-hidden="true" />
-              Your payment details are encrypted and secure.
-            </p>
-            <div className="mt-6 grid grid-cols-2 gap-4">
-              <Field label="Name on card" id="cardName">
-                <input id="cardName" required value={form.cardName} onChange={set("cardName")} className={inputCls} />
-              </Field>
-              <Field label="Card number" id="cardNumber">
-                <input
-                  id="cardNumber" required maxLength={19} placeholder=".... .... .... ...."
-                  value={form.cardNumber}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, "").slice(0, 16);
-                    setForm((prev) => ({ ...prev, cardNumber: v.replace(/(.{4})/g, "$1 ").trim() }));
-                  }}
-                  className={inputCls + " font-mono tracking-widest"}
-                />
-              </Field>
-              <Field label="Expiry (MM / YY)" id="cardExpiry" half>
-                <input
-                  id="cardExpiry" required maxLength={7} placeholder="MM / YY"
-                  value={form.cardExpiry}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, "").slice(0, 4);
-                    setForm((prev) => ({ ...prev, cardExpiry: v.length > 2 ? `${v.slice(0,2)} / ${v.slice(2)}` : v }));
-                  }}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="CVC" id="cardCvc" half>
-                <input
-                  id="cardCvc" required maxLength={4} placeholder="..."
-                  value={form.cardCvc}
-                  onChange={(e) => setForm((prev) => ({ ...prev, cardCvc: e.target.value.replace(/\D/g, "").slice(0, 4) }))}
-                  className={inputCls + " font-mono"}
-                />
-              </Field>
-            </div>
+             <h2 id="payment-heading" className="font-display text-2xl text-ink">Payment by Bank Transfer</h2>
+             <div className="mt-5 flex gap-3 rounded-xl border border-line bg-cream/40 p-5 text-sm text-espresso-light">
+               <Building2 size={20} className="mt-0.5 shrink-0 text-gold" aria-hidden="true" />
+               <p>Place your order, then bank-transfer details and delivery arrangements will be shared with you. Your order is confirmed once your transfer is verified.</p>
+             </div>
           </section>
 
           {/* Error banner */}
@@ -361,8 +277,9 @@ export default function CheckoutPage() {
             disabled={submitting}
             className="mt-10 w-full bg-ink py-4 text-xs font-semibold uppercase tracking-widest text-ivory transition-colors hover:bg-espresso disabled:opacity-60"
           >
-            {submitting ? "Processing..." : `Place Order · ${formatPrice(orderTotal)}`}
+             {submitting ? "Placing order..." : `Place Transfer Order · ${formatPrice(orderTotal)}`}
           </button>
+          <button type="button" onClick={() => openWhatsAppOrder(lines, orderTotal)} className="mt-3 flex w-full items-center justify-center gap-2 border border-[#25D366] py-4 text-xs font-semibold uppercase tracking-widest text-[#128C7E] transition-colors hover:bg-[#25D366]/10"><MessageCircle size={16} />Order via WhatsApp instead</button>
 
           <p className="mt-4 text-center text-xs text-espresso-light">
             By placing your order you agree to our{" "}
@@ -407,10 +324,6 @@ export default function CheckoutPage() {
               </div>
             </div>
           </div>
-          <p className="mt-4 flex items-center gap-2 text-xs text-espresso-light">
-            <Lock size={12} aria-hidden="true" />
-            SSL encrypted · Secure checkout
-          </p>
         </aside>
       </div>
     </div>

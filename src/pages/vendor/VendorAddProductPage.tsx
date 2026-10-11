@@ -35,9 +35,34 @@ const CATEGORIES: Record<string, string[]> = {
   Handbags: ["Tote Bags", "Clutches", "Shoulder Bags", "Crossbody Bags", "Backpacks"],
   Jewelry: ["Rings", "Earrings", "Necklaces", "Bracelets", "Sets", "Body Jewelry"],
   Beauty: ["Skincare", "Makeup", "Hair Care", "Fragrances", "Body Care"],
+  Men: ["Shirts", "Trousers", "Suits", "Casual", "Traditional", "Accessories"],
+  Women: ["Dresses", "Tops", "Skirts", "Outerwear", "Traditional", "Accessories"],
+  Offers: ["FYB Outfits", "Wholesale Bundles", "Clearance", "Special Deals"],
 };
 
 const PRESET_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+const PRODUCT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/jfif"]);
+
+function productImageContentType(file: File) {
+  // JFIF is a JPEG image. Some browsers report it as image/jfif, while the
+  // storage bucket is configured to store JPEGs as image/jpeg.
+  if (file.type === "image/jfif" || file.name.toLowerCase().endsWith(".jfif")) return "image/jpeg";
+  return file.type;
+}
+
+function productSaveErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : "Failed to save product.";
+  if (/permission denied for table order_items/i.test(message)) {
+    return "Store permissions need a one-time update before images can be uploaded. Run 20261011_fix_order_item_permissions.sql in Supabase, then try again.";
+  }
+  if (/categories.*(schema cache|column)|column .*categories/i.test(message)) {
+    return "Product categories need a one-time database update. Run 20261011_product_multiple_categories.sql in Supabase, then try again.";
+  }
+  if (/mime|content type|bucket|storage/i.test(message)) {
+    return "This image could not be uploaded. Please use a JPG, PNG, WEBP, or JFIF image up to 5 MB.";
+  }
+  return message;
+}
 
 const SHIPPING_ZONES = [
   { key: "lagos", label: "Lagos", hint: "₦1,500 typical" },
@@ -137,6 +162,7 @@ export default function VendorAddProductPage() {
 
   /* Category */
   const [category, setCategory] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
   const [subcategory, setSubcategory] = useState("");
   const [tagInput, setTagInput] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -200,7 +226,7 @@ export default function VendorAddProductPage() {
       const { data, error } = await supabase
         .from("products")
         .select(`
-          id, name, description, category, subcategory, price, compare_at_price,
+          id, name, description, category, categories, subcategory, price, compare_at_price,
           sale_enabled, tags, sizes, colors, weight, shipping_type, shipping_fee,
           delivery_zones, sku, barcode, status, is_featured,
           product_images ( id, url, display_order, color_name ),
@@ -216,6 +242,10 @@ export default function VendorAddProductPage() {
       setTitle((d.name as string) ?? "");
       setDescription((d.description as string) ?? "");
       setCategory((d.category as string) ?? "");
+      const savedCategories = Array.isArray(d.categories)
+        ? d.categories.filter((value): value is string => typeof value === "string")
+        : [];
+      setCategories(savedCategories.length > 0 ? savedCategories : ((d.category as string) ? [d.category as string] : []));
       setSubcategory((d.subcategory as string) ?? "");
       setTags((d.tags as string[]) ?? []);
       setPrice(String(d.price ?? ""));
@@ -267,6 +297,9 @@ export default function VendorAddProductPage() {
           setTitle(d.title || "");
           setDescription(d.description || "");
           setCategory(d.category || "");
+          setCategories(Array.isArray(d.categories) && d.categories.length > 0
+            ? d.categories
+            : (d.category ? [d.category] : []));
           setSubcategory(d.subcategory || "");
           setTags(d.tags || []);
           setPrice(d.price || "");
@@ -294,13 +327,13 @@ export default function VendorAddProductPage() {
   useEffect(() => {
     if (!isEditing && !saved && (title || description || category)) {
       const draft = {
-        title, description, category, subcategory, tags, price, compareAtPrice,
+        title, description, category, categories, subcategory, tags, price, compareAtPrice,
         saleEnabled, sku, barcode, weight, shippingType, shippingFee, zones,
         selectedSizes, customSizes, colors, variants
       };
       localStorage.setItem("vendor_product_draft", JSON.stringify(draft));
     }
-  }, [isEditing, saved, title, description, category, subcategory, tags, price, compareAtPrice, saleEnabled, sku, barcode, weight, shippingType, shippingFee, zones, selectedSizes, customSizes, colors, variants]);
+  }, [isEditing, saved, title, description, category, categories, subcategory, tags, price, compareAtPrice, saleEnabled, sku, barcode, weight, shippingType, shippingFee, zones, selectedSizes, customSizes, colors, variants]);
 
 
   /* ── Effects ─────────────────────────────────────────────────── */
@@ -314,9 +347,43 @@ export default function VendorAddProductPage() {
     setSubcategory("");
   }, [category]);
 
+  const selectPrimaryCategory = (nextCategory: string) => {
+    setCategory(nextCategory);
+    setCategories((current) => nextCategory
+      ? Array.from(new Set([nextCategory, ...current]))
+      : []
+    );
+  };
+
+  const toggleCategory = (value: string) => {
+    setCategories((current) => {
+      const next = current.includes(value)
+        ? current.filter((selected) => selected !== value)
+        : [...current, value];
+
+      if (category === value && !next.includes(value)) {
+        setCategory(next[0] ?? "");
+      }
+      return next;
+    });
+  };
+
   /* ── Image handlers ─────────────────────────────────────────── */
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
+    const invalidFile = files.find((file) => !PRODUCT_IMAGE_TYPES.has(file.type) && !file.name.toLowerCase().endsWith(".jfif"));
+    if (invalidFile) {
+      setSaveError("Use a JPG, PNG, WEBP, or JFIF image up to 5 MB.");
+      e.target.value = "";
+      return;
+    }
+    const oversizedFile = files.find((file) => file.size > 5 * 1024 * 1024);
+    if (oversizedFile) {
+      setSaveError("Each product image must be 5 MB or smaller.");
+      e.target.value = "";
+      return;
+    }
+    setSaveError(null);
     const slots = Math.min(files.length, 8 - images.length);
     const newImgs = files.slice(0, slots).map((f) => ({
       id: crypto.randomUUID(),
@@ -440,6 +507,7 @@ export default function VendorAddProductPage() {
         name:             title.trim(),
         description:      description.trim() || null,
         category:         category || null,
+        categories,
         subcategory:      subcategory || null,
         price:            parseFloat(price) || 0,
         compare_at_price: compareAtPrice ? parseFloat(compareAtPrice) : null,
@@ -485,7 +553,7 @@ export default function VendorAddProductPage() {
           const path = `${productId}/${img.id}.${ext}`;
           const { error: upErr } = await supabase!.storage
             .from("product-images")
-            .upload(path, img.file, { upsert: true, contentType: img.file.type });
+            .upload(path, img.file, { upsert: true, contentType: productImageContentType(img.file) });
           if (upErr) throw new Error(`Image upload failed: ${upErr.message}`);
           const { data: urlData } = supabase!.storage
             .from("product-images")
@@ -530,7 +598,7 @@ export default function VendorAddProductPage() {
       if (!isEditing) localStorage.removeItem("vendor_product_draft");
       setTimeout(() => navigate("/vendor/products"), 1800);
     } catch (err: unknown) {
-      setSaveError(err instanceof Error ? err.message : "Failed to save product.");
+      setSaveError(productSaveErrorMessage(err));
     }
   };
 
@@ -730,7 +798,7 @@ export default function VendorAddProductPage() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/jpeg,image/png,image/webp"
+                accept="image/jpeg,image/png,image/webp,image/jfif,.jfif"
                 multiple
                 className="hidden"
                 onChange={handleFileChange}
@@ -747,7 +815,7 @@ export default function VendorAddProductPage() {
                   Upload Images
                 </button>
                 <p className="text-xs text-espresso-light">
-                  {images.length}/8 images · JPG, PNG, WEBP · Max 5MB each · Drag to reorder
+                  {images.length}/8 images · JPG, PNG, WEBP, JFIF · Max 5MB each · Drag to reorder
                 </p>
               </div>
             </div>
@@ -758,12 +826,12 @@ export default function VendorAddProductPage() {
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label required>Category</Label>
+                  <Label required>Primary category</Label>
                   <div className="relative">
                     <select
                       id="product-category"
                       value={category}
-                      onChange={(e) => setCategory(e.target.value)}
+                      onChange={(e) => selectPrimaryCategory(e.target.value)}
                       className={selectCls}
                     >
                       <option value="">Select category…</option>
@@ -794,6 +862,34 @@ export default function VendorAddProductPage() {
                     </select>
                     <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-espresso-light" />
                   </div>
+                </div>
+              </div>
+
+              <div>
+                <Label>Also show this product in</Label>
+                <p className="mb-2 text-xs text-espresso-light">
+                  Choose every category where customers should find it. The primary category controls its subcategory.
+                </p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {Object.keys(CATEGORIES).map((value) => {
+                    const selected = categories.includes(value);
+                    const isPrimary = category === value;
+                    return (
+                      <label
+                        key={value}
+                        className={`flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${selected ? "border-champagne bg-cream text-ink" : "border-line bg-ivory text-espresso-light hover:bg-cream/60"}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleCategory(value)}
+                          className="h-4 w-4 accent-espresso"
+                        />
+                        <span className="truncate">{value}</span>
+                        {isPrimary && <span className="ml-auto text-[10px] font-semibold uppercase tracking-wide text-espresso-light">Primary</span>}
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -1370,7 +1466,7 @@ export default function VendorAddProductPage() {
             <ul className="space-y-2 text-xs">
               <SummaryRow label="Images" value={`${images.length} / 8`} ok={images.length > 0} />
               <SummaryRow label="Price" value={price ? formatNaira(price) : "Not set"} ok={!!price} />
-              <SummaryRow label="Category" value={category || "Not set"} ok={!!category} />
+              <SummaryRow label="Categories" value={categories.length > 0 ? categories.join(", ") : "Not set"} ok={categories.length > 0} />
               <SummaryRow label="Sizes / Variants" value={`${variants.length} variant${variants.length !== 1 ? "s" : ""}`} ok={variants.some(v => v.stock > 0) || variants[0]?.label === "Default"} />
               <SummaryRow label="Total Stock" value={`${totalStock} units`} ok={totalStock > 0} />
               <SummaryRow label="SKU" value={sku || "Not set"} ok={!!sku} />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Wallet, Download, History, RefreshCw } from "lucide-react";
+import { Wallet, Download, History } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import VendorEarningsCard from "../../components/vendor/VendorEarningsCard";

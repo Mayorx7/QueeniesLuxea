@@ -5,25 +5,56 @@ import SectionHeading from "../components/SectionHeading";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { destinationFor } from "../auth/redirects";
 
+type LoginState = { from?: string; authMessage?: string; email?: string } | null;
+
+function signInErrorMessage(message: string) {
+  const normalized = message.toLowerCase();
+  if (normalized.includes("confirm") || normalized.includes("not confirmed")) return "Confirm your email before signing in.";
+  if (normalized.includes("invalid login credentials") || normalized.includes("invalid credentials")) return "Email or password is incorrect. Please check your details and try again.";
+  if (normalized.includes("email not confirmed")) return "Confirm your email before signing in.";
+  if (normalized.includes("rate limit") || normalized.includes("too many requests")) return "Too many sign-in attempts. Please wait a few minutes and try again.";
+  if (normalized.includes("network") || normalized.includes("fetch") || normalized.includes("failed to load")) return "We could not reach the sign-in service. Check your internet connection and try again.";
+  return "We could not sign you in right now. Please try again.";
+}
+
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
+  const location = useLocation();
+  const locationState = location.state as LoginState;
+  const [email, setEmail] = useState(locationState?.email ?? "");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [confirmationMessage, setConfirmationMessage] = useState("");
   const navigate = useNavigate();
-  const location = useLocation();
-  const locationState = location.state as { from?: string; authMessage?: string } | null;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!supabase) return setError("Sign in is not configured yet. Add the public Supabase environment values first.");
-    setSubmitting(true); setError("");
+    setSubmitting(true); setError(""); setNeedsConfirmation(false); setConfirmationMessage("");
     const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setSubmitting(false);
-    if (signInError) return setError(signInError.message.toLowerCase().includes("confirm") ? "Confirm your email before signing in." : "Unable to sign in with those details.");
+    if (signInError) {
+      const friendlyMessage = signInErrorMessage(signInError.message);
+      if (friendlyMessage === "Confirm your email before signing in.") {
+        setNeedsConfirmation(true);
+        return setError(friendlyMessage);
+      }
+      return setError(friendlyMessage);
+    }
     const { data: profileData } = await supabase.from("profiles").select("role").eq("id", data.user.id).maybeSingle();
     navigate(destinationFor(profileData?.role, locationState?.from), { replace: true });
+  };
+
+  const resendConfirmation = async () => {
+    if (!supabase || !email) return;
+    setResending(true); setError("");
+    const { error: resendError } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
+    setResending(false);
+    if (resendError) return setError(resendError.message);
+    setConfirmationMessage("A new confirmation email has been sent. Check your inbox and spam folder.");
   };
 
   const signInWithProvider = async (provider: "google" | "apple") => {
@@ -51,7 +82,7 @@ export default function LoginPage() {
             autoComplete="email"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => { setEmail(e.target.value); setError(""); setNeedsConfirmation(false); }}
             className={inputCls}
           />
         </div>
@@ -72,7 +103,7 @@ export default function LoginPage() {
               autoComplete="current-password"
               required
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => { setPassword(e.target.value); setError(""); }}
               className={inputCls + " pr-10"}
             />
             <button
@@ -94,6 +125,8 @@ export default function LoginPage() {
           {submitting ? "Signing in…" : "Sign In"}
         </button>
         {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
+        {needsConfirmation && <button type="button" disabled={resending} onClick={() => void resendConfirmation()} className="-mt-2 self-start text-sm font-semibold text-espresso underline underline-offset-4 disabled:opacity-60">{resending ? "Sending confirmation…" : "Resend confirmation email"}</button>}
+        {confirmationMessage && <p role="status" className="text-sm text-emerald-700">{confirmationMessage}</p>}
       </form>
 
       <p className="mt-8 text-center text-sm text-espresso-light">

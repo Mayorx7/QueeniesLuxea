@@ -12,6 +12,7 @@ import {
   User,
   LogOut,
   X,
+  Tag,
 } from "lucide-react";
 
 interface VendorSidebarProps {
@@ -23,7 +24,9 @@ const NAV_ITEMS = [
   { label: "Dashboard", to: "/vendor", icon: LayoutDashboard, exact: true },
   { label: "Products", to: "/vendor/products", icon: Package },
   { label: "Add Product", to: "/vendor/products/add", icon: PlusSquare },
+  { label: "Offers", to: "/vendor/offers", icon: Tag },
   { label: "Orders", to: "/vendor/orders", icon: ShoppingBag },
+  { label: "Payments", to: "/vendor/payments", icon: DollarSign },
   { label: "Customers", to: "/vendor/customers", icon: Users },
   { label: "Inventory", to: "/vendor/inventory", icon: Box },
   { label: "Analytics", to: "/vendor/analytics", icon: BarChart2 },

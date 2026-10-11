@@ -1,6 +1,6 @@
 ﻿import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff } from "lucide-react";
+import { CheckCircle, Eye, EyeOff, Mail } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
 import { isSupabaseConfigured, supabase } from "../lib/supabase";
 import { destinationFor } from "../auth/redirects";
@@ -10,6 +10,7 @@ export default function RegisterPage() {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [confirmationEmail, setConfirmationEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
   const navigate = useNavigate();
@@ -31,13 +32,14 @@ export default function RegisterPage() {
       navigate(destinationFor(profileData?.role), { replace: true });
       return;
     }
-    setMessage("Check your inbox to confirm your email before signing in.");
+    setConfirmationEmail(form.email);
+    setMessage("We sent you a confirmation email.");
   };
 
   const resendConfirmation = async () => {
-    if (!supabase || !form.email) return;
+    if (!supabase || !confirmationEmail) return;
     setResending(true); setError("");
-    const { error: resendError } = await supabase.auth.resend({ type: "signup", email: form.email, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
+    const { error: resendError } = await supabase.auth.resend({ type: "signup", email: confirmationEmail, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
     setResending(false);
     if (resendError) return setError(resendError.message);
     setMessage("A new confirmation email has been sent.");
@@ -45,6 +47,24 @@ export default function RegisterPage() {
 
   const inputCls =
     "w-full border border-espresso/25 bg-ivory px-4 py-3 text-sm text-ink focus:border-espresso focus:outline-none transition-colors";
+
+  if (confirmationEmail) {
+    return (
+      <div className="mx-auto flex max-w-md flex-col items-center px-5 py-16 text-center sm:px-8 sm:py-24">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cream text-gold"><Mail size={30} strokeWidth={1.5} aria-hidden="true" /></div>
+        <h1 className="mt-6 font-display text-3xl text-ink">Confirm your email</h1>
+        <p className="mt-4 text-sm leading-relaxed text-espresso-light">We sent a confirmation link to <span className="font-semibold text-ink">{confirmationEmail}</span>. Open it to activate your account, then you’ll be taken to your dashboard.</p>
+        <div className="mt-8 w-full rounded-xl border border-line bg-cream/40 p-4 text-left text-sm text-espresso-light">
+          <p className="flex items-center gap-2 font-medium text-ink"><CheckCircle size={16} className="text-gold" /> What to do next</p>
+          <ol className="mt-3 list-decimal space-y-1 pl-5"><li>Check your inbox and spam folder.</li><li>Open the QueensLuxea confirmation email.</li><li>Use the link inside it to finish creating your account.</li></ol>
+        </div>
+        <button type="button" disabled={resending} onClick={() => void resendConfirmation()} className="mt-7 text-sm font-semibold text-espresso underline underline-offset-4 disabled:opacity-60">{resending ? "Sending confirmation…" : "Resend confirmation email"}</button>
+        {message && <p role="status" className="mt-3 text-sm text-emerald-700">{message}</p>}
+        {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
+        <Link to="/login" state={{ email: confirmationEmail, authMessage: "Once you’ve confirmed your email, sign in to continue." }} className="eyebrow mt-8 bg-ink px-7 py-3 text-ivory transition-colors hover:bg-espresso">Continue to sign in</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-sm px-5 py-16 sm:px-8 sm:py-24">
@@ -124,7 +144,6 @@ export default function RegisterPage() {
         </p>
 
         {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
-        {message && <div className="text-sm text-emerald-700"><p role="status">{message}</p><button type="button" disabled={resending} onClick={() => void resendConfirmation()} className="mt-2 text-xs font-semibold text-espresso underline disabled:opacity-60">{resending ? "Sending…" : "Resend confirmation email"}</button></div>}
         <button
           type="submit"
           disabled={submitting || !isSupabaseConfigured}

@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { Mail, Phone, Share2, MessageSquare } from "lucide-react";
+import { Mail, Phone, MessageSquare } from "lucide-react";
 import Breadcrumbs from "../components/Breadcrumbs";
 import SectionHeading from "../components/SectionHeading";
 
@@ -25,8 +25,7 @@ export default function ContactPage() {
       <div className="mb-12 max-w-xl">
         <SectionHeading eyebrow="Get in Touch" title="Contact Us" />
         <p className="mt-4 text-sm leading-relaxed text-espresso-light">
-          We'd love to hear from you. Whether you have a question about an order, need styling advice,
-          or simply want to say hello — our team is here.
+          Contact Queenie's Luxea for product enquiries, payment questions, or delivery and pickup information.
         </p>
       </div>
 
@@ -38,10 +37,10 @@ export default function ContactPage() {
               <Mail size={18} className="mt-0.5 shrink-0 text-gold" strokeWidth={1.5} aria-hidden="true" />
               <div>
                 <p className="eyebrow mb-1 text-espresso-light">Email</p>
-                <a href="mailto:hello@queensluxea.com" className="text-sm text-ink link-underline hover:text-gold">
-                  hello@queensluxea.com
+                <a href="mailto:giftadegahi@gmil.com" className="text-sm text-ink link-underline hover:text-gold">
+                  giftadegahi@gmil.com
                 </a>
-                <p className="mt-1 text-xs text-espresso-light">Response within 24 hours</p>
+                <p className="mt-1 text-xs text-espresso-light">For enquiries and order support</p>
               </div>
             </div>
 
@@ -49,32 +48,28 @@ export default function ContactPage() {
               <Phone size={18} className="mt-0.5 shrink-0 text-gold" strokeWidth={1.5} aria-hidden="true" />
               <div>
                 <p className="eyebrow mb-1 text-espresso-light">Phone</p>
-                <a href="tel:+12125550193" className="text-sm text-ink link-underline hover:text-gold">
-                  +1 (212) 555-0193
+                <a href="tel:+2348150959869" className="text-sm text-ink link-underline hover:text-gold">
+                  +234 815 095 9869
                 </a>
-                <p className="mt-1 text-xs text-espresso-light">Mon – Fri, 9 am – 6 pm EST</p>
+                <p className="mt-1 text-xs text-espresso-light">Call or WhatsApp</p>
               </div>
             </div>
 
             <div className="flex items-start gap-4">
-              <Share2 size={18} className="mt-0.5 shrink-0 text-gold" strokeWidth={1.5} aria-hidden="true" />
+              <MessageSquare size={18} className="mt-0.5 shrink-0 text-gold" strokeWidth={1.5} aria-hidden="true" />
               <div>
-                <p className="eyebrow mb-1 text-espresso-light">Social</p>
-                <div className="flex flex-col gap-1.5 text-sm">
-                  <a href="#" className="text-ink link-underline hover:text-gold">@queensluxea</a>
-                  <a href="#" className="text-ink link-underline hover:text-gold">Pinterest</a>
-                  <a href="#" className="text-ink link-underline hover:text-gold">Facebook</a>
-                </div>
+                <p className="eyebrow mb-1 text-espresso-light">Delivery & Pickup</p>
+                <p className="text-sm text-ink">Sundays only. Immediate pickup or delivery is not available.</p>
               </div>
             </div>
 
             <div className="border-t border-line pt-8">
               <p className="eyebrow mb-3 text-espresso-light">Our Address</p>
               <address className="not-italic text-sm leading-relaxed text-espresso">
-                QueensLuxea<br />
-                14 West 57th Street<br />
-                New York, NY 10019<br />
-                United States
+                Queenie's Luxea<br />
+                Abraka, Delta State<br />
+                Lagos State<br />
+                Nigeria
               </address>
             </div>
           </div>
@@ -87,7 +82,7 @@ export default function ContactPage() {
               <MessageSquare size={32} className="text-gold" strokeWidth={1.25} aria-hidden="true" />
               <p className="font-display text-2xl text-ink">Message Received</p>
               <p className="max-w-sm text-sm text-espresso-light">
-                Thank you for reaching out. A member of our team will be in touch within 24 hours.
+                Thank you for reaching out. The vendor will be with you shortly.
               </p>
               <button
                 type="button"
@@ -114,7 +109,7 @@ export default function ContactPage() {
                 <select id="contact-subject" value={form.subject} onChange={set("subject")} className={inputCls}>
                   <option value="">Select a topic…</option>
                   <option>Order enquiry</option>
-                  <option>Returns & exchanges</option>
+                  <option>Delivery or pickup</option>
                   <option>Product question</option>
                   <option>Press & partnerships</option>
                   <option>General</option>

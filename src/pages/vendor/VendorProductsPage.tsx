@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   RefreshCw,
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import VendorConfirmDialog from "../../components/vendor/VendorConfirmDialog";
@@ -23,6 +23,7 @@ interface DbProduct {
   id: string;
   name: string;
   category: string | null;
+  categories: string[] | null;
   price: number;
   compare_at_price: number | null;
   sale_enabled: boolean;
@@ -39,6 +40,7 @@ interface Product {
   id: string;
   name: string;
   category: string;
+  categories: string[];
   price: number;
   compareAtPrice: number | null;
   saleEnabled: boolean;
@@ -64,6 +66,7 @@ function mapRow(row: DbProduct): Product {
     id:           row.id,
     name:         row.name,
     category:     row.category ?? "—",
+    categories:   row.categories?.length ? row.categories : (row.category ? [row.category] : []),
     price:        row.price,
     compareAtPrice: row.compare_at_price,
     saleEnabled:  row.sale_enabled,
@@ -74,7 +77,7 @@ function mapRow(row: DbProduct): Product {
   };
 }
 
-const CATEGORIES = ["All", "Dresses", "Tops", "Bottoms", "Outerwear", "Accessories", "Shoes", "Handbags", "Jewelry", "Beauty"];
+const CATEGORIES = ["All", "Dresses", "Tops", "Bottoms", "Outerwear", "Accessories", "Shoes", "Handbags", "Jewelry", "Beauty", "Men", "Women", "Offers"];
 
 type StatusTab = "all" | "published" | "draft" | "out-of-stock";
 
@@ -94,6 +97,7 @@ const STATUS_LABEL: Record<DbStatus, string> = {
 
 export default function VendorProductsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   const [products, setProducts] = useState<Product[]>([]);
@@ -117,7 +121,7 @@ export default function VendorProductsPage() {
       const { data, error: err } = await supabase
         .from("products")
         .select(`
-          id, name, category, price, compare_at_price, sale_enabled, sku, status, created_at,
+          id, name, category, categories, price, compare_at_price, sale_enabled, sku, status, created_at,
           product_images ( url, display_order ),
           product_variants ( stock )
         `)
@@ -146,7 +150,7 @@ export default function VendorProductsPage() {
   // ── Filtering ───────────────────────────────────────────────────────────────
   const filtered = products.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchCat = catFilter === "All" || p.category === catFilter;
+    const matchCat = catFilter === "All" || p.categories.includes(catFilter);
     const matchTab =
       activeTab === "all" ||
       (activeTab === "published"   && p.status === "published") ||
@@ -240,6 +244,11 @@ export default function VendorProductsPage() {
     <div className="space-y-6 pb-14">
 
       {/* ── Page header ── */}
+      {(location.state as { message?: string } | null)?.message && (
+        <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm text-emerald-800">
+          {(location.state as { message: string }).message}
+        </div>
+      )}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="font-display text-2xl text-ink">Products</h2>
@@ -472,7 +481,7 @@ function ProductRow({ product: p, actionLoading, onEdit, onView, onDelete, onTog
       </td>
 
       {/* Category */}
-      <td className="py-3.5 px-4 text-espresso-light text-xs">{p.category}</td>
+      <td className="py-3.5 px-4 text-espresso-light text-xs">{p.categories.join(", ") || p.category}</td>
 
       {/* Price */}
       <td className="py-3.5 px-4">

@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle, MapPin, Truck, ShoppingBag } from "lucide-react";
+import OrderStatusStepper from "../components/orders/OrderStatusStepper";
 
 interface OrderState {
   orderNumber: string;
@@ -109,34 +110,11 @@ export default function OrderConfirmationPage() {
       </div>
 
       {/* What happens next */}
-      <div className="mt-10 border border-line bg-cream px-6 py-6">
-        <p className="eyebrow mb-4 text-espresso-light">What Happens Next</p>
-        <ol className="flex flex-col gap-3 text-sm text-espresso">
-          <li className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-gold text-[0.65rem] font-semibold text-gold">
-              1
-            </span>
-            Order confirmation email sent to {order.email}
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-gold text-[0.65rem] font-semibold text-gold">
-              2
-            </span>
-            Your order is carefully packaged by our team
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-gold text-[0.65rem] font-semibold text-gold">
-              3
-            </span>
-            Shipping notification with tracking information
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-gold text-[0.65rem] font-semibold text-gold">
-              4
-            </span>
-            Delivered to your door in {order.delivery.toLowerCase() === "overnight" ? "1 business day" : order.delivery.toLowerCase() === "express" ? "2–3 business days" : "5–8 business days"}
-          </li>
-        </ol>
+      <div className="mt-12 rounded-2xl border border-line bg-ivory p-6 sm:p-8">
+        <p className="eyebrow mb-6 text-espresso-light text-center">Order Progress</p>
+        <div className="mx-auto max-w-lg">
+          <OrderStatusStepper status="confirmed" />
+        </div>
       </div>
 
       {/* Actions */}
