@@ -2,7 +2,7 @@ import { type FormEvent, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
-import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase";
 import { destinationFor } from "../auth/redirects";
 
 type LoginState = { from?: string; authMessage?: string; email?: string } | null;
@@ -119,8 +119,8 @@ export default function LoginPage() {
 
         <button
           type="submit"
-          disabled={submitting || !isSupabaseConfigured}
-          className="mt-2 w-full bg-ink py-4 text-xs font-semibold uppercase tracking-widest text-ivory transition-colors hover:bg-espresso"
+          disabled={submitting}
+          className="mt-2 flex min-h-[48px] w-full items-center justify-center bg-ink py-4 text-xs font-semibold uppercase tracking-widest text-ivory transition-all hover:bg-espresso active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer touch-manipulation"
         >
           {submitting ? "Signing in…" : "Sign In"}
         </button>

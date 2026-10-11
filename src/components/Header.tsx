@@ -203,7 +203,17 @@ export default function Header() {
             <Search size={19} />
           </button>
 
-          {/* Account / Login & Register — desktop only (mobile: in bottom nav) */}
+          {/* Account / Sign In — mobile icon button */}
+          <Link
+            to={user ? "/account" : "/login"}
+            aria-label={user ? "Account" : "Sign In"}
+            id="mobile-header-account-btn"
+            className="flex min-h-[44px] min-w-[44px] items-center justify-center text-[var(--color-espresso)] hover:text-[var(--color-gold)] transition-colors md:hidden"
+          >
+            <User size={19} />
+          </Link>
+
+          {/* Account / Login & Register — desktop view */}
           {!loading && user ? (
             <Link
               to="/account"
@@ -219,7 +229,7 @@ export default function Header() {
                 id="header-login-btn"
                 className="eyebrow link-underline text-[0.72rem] text-[var(--color-espresso)] hover:text-[var(--color-gold)] transition-all duration-200 hover:scale-105 inline-block"
               >
-                Login
+                Sign In
               </Link>
               <Link
                 to="/register"

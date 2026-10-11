@@ -1,8 +1,8 @@
-﻿import { type FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CheckCircle, Eye, EyeOff, Mail } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
-import { isSupabaseConfigured, supabase } from "../lib/supabase";
+import { supabase } from "../lib/supabase";
 import { destinationFor } from "../auth/redirects";
 
 export default function RegisterPage() {
@@ -146,8 +146,8 @@ export default function RegisterPage() {
         {error && <p role="alert" className="text-sm text-red-700">{error}</p>}
         <button
           type="submit"
-          disabled={submitting || !isSupabaseConfigured}
-          className="mt-2 w-full bg-ink py-4 text-xs font-semibold uppercase tracking-widest text-ivory transition-colors hover:bg-espresso"
+          disabled={submitting}
+          className="mt-2 flex min-h-[48px] w-full items-center justify-center bg-ink py-4 text-xs font-semibold uppercase tracking-widest text-ivory transition-all hover:bg-espresso active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer touch-manipulation"
         >
           {submitting ? "Creating account…" : "Create Account"}
         </button>

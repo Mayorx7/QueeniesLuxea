@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Star, Loader2 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -129,12 +130,12 @@ export default function ProductReviews({ productId, productName }: ProductReview
               If you’ve used this product, share your thoughts with other customers.
             </p>
             {!user ? (
-              <button 
-                disabled 
-                className="w-full rounded-full border border-line bg-cream px-5 py-3 text-sm font-semibold text-espresso-light cursor-not-allowed"
+              <Link 
+                to="/login"
+                className="flex items-center justify-center w-full rounded-full border border-ink/40 bg-transparent px-5 py-3 text-sm font-semibold text-ink hover:bg-ink hover:text-ivory transition-colors text-center"
               >
                 Sign in to write a review
-              </button>
+              </Link>
             ) : userHasReviewed ? (
               <p className="text-sm font-semibold text-emerald-700 bg-emerald-50 px-4 py-3 rounded-lg border border-emerald-100 text-center">
                 You've already reviewed this product.

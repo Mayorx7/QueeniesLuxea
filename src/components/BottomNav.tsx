@@ -17,7 +17,7 @@ export default function BottomNav() {
   const location = useLocation();
   const { itemCount } = useCart();
   const { count: wishlistCount } = useWishlist();
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   // Only animate on first mount — not on every route change
   const mountedRef = useRef(false);
   const didAnimate = useRef(false);
@@ -56,9 +56,9 @@ export default function BottomNav() {
       badge: itemCount,
     },
     {
-      label: loading ? "…" : user ? "Profile" : "Login",
-      to: loading ? "#" : user ? "/account" : "/login",
-      icon: loading ? <User size={22} /> : user ? <User size={22} /> : <LogIn size={22} />,
+      label: user ? "Profile" : "Sign In",
+      to: user ? "/account" : "/login",
+      icon: user ? <User size={22} /> : <LogIn size={22} />,
     },
   ];
 

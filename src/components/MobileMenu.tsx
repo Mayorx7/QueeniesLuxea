@@ -19,7 +19,7 @@ interface MobileMenuProps {
 export default function MobileMenu({ open, onClose, links }: MobileMenuProps) {
   const location = useLocation();
   const closeRef = useRef<HTMLButtonElement>(null);
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
   useEffect(() => {
@@ -82,6 +82,7 @@ export default function MobileMenu({ open, onClose, links }: MobileMenuProps) {
                         <Link
                           key={sub.to}
                           to={sub.to}
+                          onClick={onClose}
                           className="block border-b border-line py-3 text-base text-[var(--color-espresso)] hover:text-[var(--color-gold)] transition-colors"
                         >
                           {sub.label}
@@ -93,6 +94,7 @@ export default function MobileMenu({ open, onClose, links }: MobileMenuProps) {
               ) : (
                 <Link
                   to={link.to}
+                  onClick={onClose}
                   className="block border-b border-line py-4 font-display text-xl text-ink"
                 >
                   {link.label}
@@ -100,18 +102,29 @@ export default function MobileMenu({ open, onClose, links }: MobileMenuProps) {
               )}
             </div>
           ))}
-          {!loading && !user && (
+          {!user ? (
             <>
-              <Link to="/login" className="border-b border-line py-4 font-display text-xl text-ink">
-                Login
+              <Link
+                to="/login"
+                onClick={onClose}
+                className="block border-b border-line py-4 font-display text-xl text-ink hover:text-gold transition-colors"
+              >
+                Sign In
               </Link>
-              <Link to="/register" className="border-b border-line py-4 font-display text-xl text-[var(--color-gold)]">
-                Register
+              <Link
+                to="/register"
+                onClick={onClose}
+                className="block border-b border-line py-4 font-display text-xl text-[var(--color-gold)]"
+              >
+                Create Account
               </Link>
             </>
-          )}
-          {!loading && user && (
-            <Link to="/account" className="border-b border-line py-4 font-display text-xl text-[var(--color-gold)]">
+          ) : (
+            <Link
+              to="/account"
+              onClick={onClose}
+              className="block border-b border-line py-4 font-display text-xl text-[var(--color-gold)]"
+            >
               My Account
             </Link>
           )}
