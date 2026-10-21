@@ -1,4 +1,4 @@
-﻿import { Truck, Globe, Clock, Package } from "lucide-react";
+import { Truck, Globe, Clock, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import Breadcrumbs from "../components/Breadcrumbs";
 import SectionHeading from "../components/SectionHeading";
@@ -73,7 +73,7 @@ export default function ShippingPage() {
           {
             icon: Package,
             title: "Signature Packaging",
-            body: "Each order is wrapped in our signature ivory tissue paper, sealed with a QueensLuxea wax sticker, and placed in a recycled kraft gift box.",
+            body: "Each order is wrapped in our signature ivory tissue paper, sealed with a QueeniesLuxea wax sticker, and placed in a recycled kraft gift box.",
           },
           {
             icon: Globe,

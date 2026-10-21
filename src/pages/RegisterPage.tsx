@@ -4,6 +4,7 @@ import { CheckCircle, Eye, EyeOff, Mail } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
 import { supabase } from "../lib/supabase";
 import { destinationFor } from "../auth/redirects";
+import { authRedirect } from "../auth/urls";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", confirmPassword: "" });
@@ -24,7 +25,7 @@ export default function RegisterPage() {
     if (form.password.length < 12) return setError("Use a password with at least 12 characters.");
     if (form.password !== form.confirmPassword) return setError("Passwords do not match.");
     setSubmitting(true); setError("");
-    const { data, error: signUpError } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { emailRedirectTo: `${window.location.origin}/auth/callback`, data: { first_name: form.firstName, last_name: form.lastName } } });
+    const { data, error: signUpError } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { emailRedirectTo: authRedirect("/auth/callback"), data: { first_name: form.firstName, last_name: form.lastName } } });
     setSubmitting(false);
     if (signUpError) return setError(signUpError.message);
     if (data.session) {
@@ -39,7 +40,7 @@ export default function RegisterPage() {
   const resendConfirmation = async () => {
     if (!supabase || !confirmationEmail) return;
     setResending(true); setError("");
-    const { error: resendError } = await supabase.auth.resend({ type: "signup", email: confirmationEmail, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
+    const { error: resendError } = await supabase.auth.resend({ type: "signup", email: confirmationEmail, options: { emailRedirectTo: authRedirect("/auth/callback") } });
     setResending(false);
     if (resendError) return setError(resendError.message);
     setMessage("A new confirmation email has been sent.");
@@ -56,7 +57,7 @@ export default function RegisterPage() {
         <p className="mt-4 text-sm leading-relaxed text-espresso-light">We sent a confirmation link to <span className="font-semibold text-ink">{confirmationEmail}</span>. Open it to activate your account, then you’ll be taken to your dashboard.</p>
         <div className="mt-8 w-full rounded-xl border border-line bg-cream/40 p-4 text-left text-sm text-espresso-light">
           <p className="flex items-center gap-2 font-medium text-ink"><CheckCircle size={16} className="text-gold" /> What to do next</p>
-          <ol className="mt-3 list-decimal space-y-1 pl-5"><li>Check your inbox and spam folder.</li><li>Open the QueensLuxea confirmation email.</li><li>Use the link inside it to finish creating your account.</li></ol>
+          <ol className="mt-3 list-decimal space-y-1 pl-5"><li>Check your inbox and spam folder.</li><li>Open the QueeniesLuxea confirmation email.</li><li>Use the link inside it to finish creating your account.</li></ol>
         </div>
         <button type="button" disabled={resending} onClick={() => void resendConfirmation()} className="mt-7 text-sm font-semibold text-espresso underline underline-offset-4 disabled:opacity-60">{resending ? "Sending confirmation…" : "Resend confirmation email"}</button>
         {message && <p role="status" className="mt-3 text-sm text-emerald-700">{message}</p>}
@@ -68,7 +69,7 @@ export default function RegisterPage() {
 
   return (
     <div className="mx-auto max-w-sm px-5 py-16 sm:px-8 sm:py-24">
-      <SectionHeading eyebrow="Join QueensLuxea" title="Create Account" align="center" className="mb-10" />
+      <SectionHeading eyebrow="Join QueeniesLuxea" title="Create Account" align="center" className="mb-10" />
 
       <form onSubmit={handleSubmit} aria-label="Create account form" className="flex flex-col gap-5">
         <div className="grid grid-cols-2 gap-4">

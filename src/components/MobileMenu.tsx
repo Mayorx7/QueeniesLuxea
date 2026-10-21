@@ -129,9 +129,6 @@ export default function MobileMenu({ open, onClose, links }: MobileMenuProps) {
             </Link>
           )}
         </nav>
-        <div className="border-t border-line px-6 py-5 text-xs text-espresso-light">
-          <p>Complimentary shipping on orders over $150</p>
-        </div>
       </div>
       <style>{`
         @keyframes slideInLeft {

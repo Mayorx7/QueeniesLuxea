@@ -17,7 +17,7 @@ const FAQ_SECTIONS = [
       },
       {
         title: "Do you offer gift wrapping?",
-        content: "Yes. Every QueensLuxea order is packaged with care in our signature tissue and ribbon. Complimentary gift messaging is available at checkout.",
+        content: "Yes. Every QueeniesLuxea order is packaged with care in our signature tissue and ribbon. Complimentary gift messaging is available at checkout.",
       },
       {
         title: "Will I receive an order confirmation?",
@@ -55,7 +55,7 @@ const FAQ_SECTIONS = [
       },
       {
         title: "How do I initiate a return?",
-        content: "Contact our team at hello@queensluxea.com with your order number and reason for return. We will provide a prepaid return label for domestic orders.",
+        content: "Contact our team at hello@queeniesluxea.com with your order number and reason for return. We will provide a prepaid return label for domestic orders.",
       },
       {
         title: "When will I receive my refund?",
@@ -79,7 +79,7 @@ const FAQ_SECTIONS = [
         content: "We strive to offer inclusive sizing. Availability varies by style. Use the filters on the Shop page to browse products in your size.",
       },
       {
-        title: "How should I care for my QueensLuxea pieces?",
+        title: "How should I care for my QueeniesLuxea pieces?",
         content: "Care instructions are printed on the garment label and listed on each product page. Most of our garments are dry-clean only or require gentle hand washing in cold water.",
       },
     ],

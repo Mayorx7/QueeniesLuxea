@@ -1,17 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SmartImage from "./SmartImage";
+import { imageForDisplay } from "../utils/image";
 
 interface ImageGalleryProps {
   images: string[];
   productName: string;
+  /** Optionally focus one of the existing gallery images (for example, after a color selection). */
+  initialImage?: string;
 }
 
-export default function ImageGallery({ images, productName }: ImageGalleryProps) {
+export default function ImageGallery({ images, productName, initialImage }: ImageGalleryProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [touchEndX, setTouchEndX] = useState<number | null>(null);
 
   const MIN_SWIPE_DISTANCE = 50;
+
+  useEffect(() => {
+    const imageIndex = initialImage ? images.indexOf(initialImage) : -1;
+    if (imageIndex >= 0) setActiveIndex(imageIndex);
+  }, [images, initialImage]);
 
   const goNext = () => setActiveIndex((i) => Math.min(i + 1, images.length - 1));
   const goPrev = () => setActiveIndex((i) => Math.max(i - 1, 0));
@@ -46,7 +54,7 @@ export default function ImageGallery({ images, productName }: ImageGalleryProps)
                 activeIndex === i ? "border-espresso" : "border-line"
               }`}
             >
-              <SmartImage src={src} alt="" className="h-full w-full object-cover" />
+              <SmartImage src={imageForDisplay(src, 160)} alt="" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
@@ -63,6 +71,8 @@ export default function ImageGallery({ images, productName }: ImageGalleryProps)
           src={images[activeIndex]}
           alt={`${productName}, view ${activeIndex + 1}`}
           className="h-full w-full object-cover"
+          loading="eager"
+          fetchPriority="high"
         />
 
         {/* Swipe dot indicators — mobile only */}

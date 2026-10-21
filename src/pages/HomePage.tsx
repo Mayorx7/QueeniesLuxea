@@ -43,16 +43,16 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-ink)]/85 via-[var(--color-ink)]/20 to-transparent" />
         <div className="relative mx-auto w-full max-w-7xl px-5 pb-10 sm:px-8 sm:pb-24">
           <p className="eyebrow fade-in mb-3 text-[var(--color-gold-light)] md:mb-4">
-            Fall Collection, 2026
+            New Collection 2026
           </p>
           <h1 className="fade-in font-display leading-[1.05] text-[var(--color-ivory)] text-3xl max-w-xs sm:text-5xl sm:max-w-lg md:text-6xl lg:text-7xl md:max-w-xl">
-            Made for Her Moment
+            Up to 30% Off
           </h1>
           <p
             className="fade-in mt-4 max-w-xs text-sm leading-relaxed text-[var(--color-ivory)]/85 md:mt-6 md:max-w-md md:text-base"
             style={{ animationDelay: "0.1s" }}
           >
-            Curated essentials for the woman who enters every room with intention.
+            Discover our latest curated pieces
           </p>
           <div className="fade-in mt-6 flex flex-wrap gap-3 md:mt-9 md:gap-4" style={{ animationDelay: "0.2s" }}>
             <Link
@@ -225,7 +225,7 @@ export default function HomePage() {
           <h2 className="font-display text-2xl leading-snug text-[var(--color-ink)] sm:text-3xl md:text-4xl">
             "Luxury is not what you wear. It is how you feel when you do."
           </h2>
-          <p className="mt-5 text-sm text-[var(--color-espresso-light)]">— The QueenLuxea Atelier</p>
+          <p className="mt-5 text-sm text-[var(--color-espresso-light)]">— The QueeniesLuxea Atelier</p>
         </div>
       </section>
 
@@ -233,14 +233,14 @@ export default function HomePage() {
       <section className="relative flex h-[50vh] min-h-[280px] items-center overflow-hidden bg-[var(--color-ink)] md:h-[70vh] md:min-h-[420px]">
         <SmartImage
           src={img("photo-1566174053879-31528523f8ae", 1800)}
-          alt="Editorial fashion photograph from the QueenLuxea seasonal lookbook"
+          alt="Editorial fashion photograph from the QueeniesLuxea seasonal lookbook"
           className="absolute inset-0 h-full w-full object-cover opacity-70"
         />
         <div className="absolute inset-0 bg-[var(--color-ink)]/40" />
         <div className="relative mx-auto w-full max-w-7xl px-5 sm:px-8">
           <p className="eyebrow mb-3 text-[var(--color-gold-light)]">Seasonal Edit</p>
           <h2 className="max-w-xs font-display text-3xl text-[var(--color-ivory)] sm:max-w-md sm:text-4xl md:text-5xl">
-            The QueenLuxea Edit
+            The QueeniesLuxea Edit
           </h2>
           <Link
             to="/lookbook"

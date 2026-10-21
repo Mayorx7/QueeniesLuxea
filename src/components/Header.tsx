@@ -115,7 +115,7 @@ export default function Header() {
         <Link to="/" className="mx-auto lg:mx-0">
           <img
             src="/log.png"
-            alt="QueenLuxea"
+            alt="QueeniesLuxea"
             className="h-10 w-auto object-contain sm:h-12"
           />
         </Link>

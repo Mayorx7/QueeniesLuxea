@@ -28,7 +28,7 @@ export default function MobilePromoBanner() {
             <div className="flex items-center gap-1.5 mb-1">
               <Sparkles size={12} className="text-[var(--color-gold-light)]" aria-hidden="true" />
               <p className="eyebrow text-[0.62rem] text-[var(--color-gold-light)]">
-                Fall Collection 2026
+                New Collection 2026
               </p>
             </div>
             <h2 className="font-display text-xl leading-tight text-[var(--color-ivory)]">

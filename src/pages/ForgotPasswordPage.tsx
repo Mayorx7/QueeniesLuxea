@@ -2,6 +2,7 @@ import { type FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
+import { authRedirect } from "../auth/urls";
 import { supabase } from "../lib/supabase";
 
 export default function ForgotPasswordPage() {
@@ -15,8 +16,8 @@ export default function ForgotPasswordPage() {
     setError("");
     if (!supabase) return;
     
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { 
-      redirectTo: `${window.location.origin}/reset-password` 
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: authRedirect("/reset-password"),
     });
     
     if (error) {

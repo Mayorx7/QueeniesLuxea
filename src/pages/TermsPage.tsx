@@ -6,7 +6,7 @@ const LAST_UPDATED = "September 2026";
 const SECTIONS = [
   {
     heading: "Acceptance of Terms",
-    body: "By accessing or using the QueensLuxea website, you agree to be bound by these Terms of Service. If you do not agree, please do not use our site.",
+    body: "By accessing or using the QueeniesLuxea website, you agree to be bound by these Terms of Service. If you do not agree, please do not use our site.",
   },
   {
     heading: "Products and Pricing",
@@ -18,7 +18,7 @@ const SECTIONS = [
   },
   {
     heading: "Shipping and Delivery",
-    body: "Delivery times are estimates and not guaranteed. QueensLuxea is not liable for delays caused by the shipping carrier, customs, weather, or other events beyond our control. Risk of loss passes to the customer upon handoff to the carrier.",
+    body: "Delivery times are estimates and not guaranteed. QueeniesLuxea is not liable for delays caused by the shipping carrier, customs, weather, or other events beyond our control. Risk of loss passes to the customer upon handoff to the carrier.",
   },
   {
     heading: "Returns and Refunds",
@@ -26,7 +26,7 @@ const SECTIONS = [
   },
   {
     heading: "Intellectual Property",
-    body: "All content on this website — including photographs, text, graphics, logos, and design — is the property of QueensLuxea or its content suppliers and is protected by copyright and other intellectual property laws. You may not reproduce, distribute, or create derivative works without our prior written consent.",
+    body: "All content on this website — including photographs, text, graphics, logos, and design — is the property of QueeniesLuxea or its content suppliers and is protected by copyright and other intellectual property laws. You may not reproduce, distribute, or create derivative works without our prior written consent.",
   },
   {
     heading: "User Accounts",
@@ -34,7 +34,7 @@ const SECTIONS = [
   },
   {
     heading: "Limitation of Liability",
-    body: "To the fullest extent permitted by law, QueensLuxea shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the site or products purchased.",
+    body: "To the fullest extent permitted by law, QueeniesLuxea shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the site or products purchased.",
   },
   {
     heading: "Governing Law",
@@ -46,7 +46,7 @@ const SECTIONS = [
   },
   {
     heading: "Contact",
-    body: "Questions about these Terms should be directed to legal@queensluxea.com.",
+    body: "Questions about these Terms should be directed to legal@queeniesluxea.com.",
   },
 ];
 

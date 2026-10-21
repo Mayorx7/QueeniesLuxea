@@ -112,7 +112,7 @@ export default function VendorProfilePage() {
                   { title: "New Orders", desc: "Receive an email when a new order is placed." },
                   { title: "Low Stock Alerts", desc: "Get notified when a product inventory falls below 5." },
                   { title: "Payout Updates", desc: "Receive emails about payout status changes." },
-                  { title: "Marketing & Promos", desc: "Receive tips and offers from QueenLuxea." }
+                  { title: "Marketing & Promos", desc: "Receive tips and offers from QueeniesLuxea." }
                 ].map((item, i) => (
                   <div key={i} className="flex items-start justify-between gap-4 py-2">
                     <div>

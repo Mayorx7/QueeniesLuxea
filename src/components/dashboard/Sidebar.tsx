@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
+  Home,
   Package, 
   MapPin,
   Heart, 
@@ -18,6 +19,7 @@ interface SidebarProps {
 }
 
 const NAV_ITEMS = [
+  { label: "Home", to: "/", icon: Home, exact: true },
   { label: "Dashboard", to: "/account", icon: LayoutDashboard, exact: true },
   { label: "My Orders", to: "/account/orders", icon: Package },
   { label: "Addresses", to: "/account/addresses", icon: MapPin },
@@ -58,7 +60,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <NavLink to="/">
             <img
               src="/log.png"
-              alt="QueenLuxea"
+              alt="QueeniesLuxea"
               className="h-9 w-auto object-contain"
             />
           </NavLink>

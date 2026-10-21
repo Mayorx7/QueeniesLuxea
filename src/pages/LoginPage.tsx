@@ -4,6 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import SectionHeading from "../components/SectionHeading";
 import { supabase } from "../lib/supabase";
 import { destinationFor } from "../auth/redirects";
+import { authRedirect } from "../auth/urls";
 
 type LoginState = { from?: string; authMessage?: string; email?: string } | null;
 
@@ -51,7 +52,7 @@ export default function LoginPage() {
   const resendConfirmation = async () => {
     if (!supabase || !email) return;
     setResending(true); setError("");
-    const { error: resendError } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: `${window.location.origin}/auth/callback` } });
+    const { error: resendError } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo: authRedirect("/auth/callback") } });
     setResending(false);
     if (resendError) return setError(resendError.message);
     setConfirmationMessage("A new confirmation email has been sent. Check your inbox and spam folder.");
@@ -59,7 +60,7 @@ export default function LoginPage() {
 
   const signInWithProvider = async (provider: "google" | "apple") => {
     if (!supabase) return setError("Sign in is not configured yet.");
-    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: `${window.location.origin}/auth/callback` } });
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: authRedirect("/auth/callback") } });
     if (oauthError) setError(oauthError.message);
   };
 
@@ -130,7 +131,7 @@ export default function LoginPage() {
       </form>
 
       <p className="mt-8 text-center text-sm text-espresso-light">
-        New to QueensLuxea?{" "}
+        New to QueeniesLuxea?{" "}
         <Link to="/register" className="font-semibold text-ink link-underline hover:text-gold">
           Create an account
         </Link>

@@ -17,7 +17,7 @@ import {
   AlertTriangle,
   Star,
 } from "lucide-react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../context/AuthContext";
 import VendorConfirmDialog from "../../components/vendor/VendorConfirmDialog";
@@ -148,7 +148,9 @@ export default function VendorAddProductPage() {
   const { id } = useParams<{ id?: string }>();
   const isEditing = !!id;
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+  const isAdminEditor = location.pathname.startsWith("/admin/");
 
   /* Images */
   const [images, setImages] = useState<ImageSlot[]>([]);
@@ -503,7 +505,6 @@ export default function VendorAddProductPage() {
       const allSizes = [...selectedSizes, ...customSizes];
       const payload = {
         slug:             generateSlug(title.trim()),
-        vendor_id:        user.id,
         name:             title.trim(),
         description:      description.trim() || null,
         category:         category || null,
@@ -538,7 +539,7 @@ export default function VendorAddProductPage() {
         // ── Insert ─────────────────────────────────────────────
         const { data: inserted, error: insertErr } = await supabase
           .from("products")
-          .insert(payload)
+          .insert({ ...payload, vendor_id: user.id })
           .select("id")
           .single();
         if (insertErr) throw insertErr;
@@ -596,7 +597,7 @@ export default function VendorAddProductPage() {
       setStatus(targetStatus);
       setSaved(true);
       if (!isEditing) localStorage.removeItem("vendor_product_draft");
-      setTimeout(() => navigate("/vendor/products"), 1800);
+      setTimeout(() => navigate(isAdminEditor ? "/admin/products" : "/vendor/products"), 1800);
     } catch (err: unknown) {
       setSaveError(productSaveErrorMessage(err));
     }
@@ -616,7 +617,7 @@ export default function VendorAddProductPage() {
       {/* ── Header ── */}
       <div className="flex items-center gap-4">
         <Link
-          to="/vendor/products"
+          to={isAdminEditor ? "/admin/products" : "/vendor/products"}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line bg-ivory text-espresso-light hover:bg-cream transition-colors"
         >
           <ArrowLeft size={18} />

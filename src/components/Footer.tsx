@@ -11,7 +11,7 @@ export default function Footer() {
             <Link to="/" className="inline-block">
               <img
                 src="/log.png"
-                alt="QueenLuxea"
+                alt="QueeniesLuxea"
                 className="h-10 w-auto object-contain brightness-0 invert sm:h-12"
               />
             </Link>
@@ -61,7 +61,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 flex flex-col items-start justify-between gap-4 border-t border-[var(--color-ivory)]/15 pt-6 text-xs text-[var(--color-ivory)]/50 sm:flex-row sm:items-center">
-          <p>&copy; {new Date().getFullYear()} QueenLuxea. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} QueeniesLuxea. All rights reserved.</p>
           <div className="flex flex-wrap gap-4">
             <Link to="/privacy" className="hover:text-[var(--color-ivory)] transition-colors">Privacy Policy</Link>
             <Link to="/terms" className="hover:text-[var(--color-ivory)] transition-colors">Terms of Service</Link>

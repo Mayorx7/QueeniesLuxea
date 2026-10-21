@@ -60,7 +60,7 @@ export default function SearchResultsPage() {
           <p className="font-display text-2xl text-ink">Enter a search term</p>
           <p className="max-w-sm text-sm text-espresso-light">
             Use the search icon in the header to find dresses, handbags,
-            jewelry, and more from the QueensLuxea collection.
+            jewelry, and more from the QueeniesLuxea collection.
           </p>
           <Link
             to="/shop"

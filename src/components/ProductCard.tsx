@@ -5,6 +5,7 @@ import SmartImage from "./SmartImage";
 import WishlistButton from "./WishlistButton";
 import { useCart } from "../context/CartContext";
 import { formatPrice } from "../utils/format";
+import { imageForDisplay } from "../utils/image";
 
 interface ProductCardProps {
   product: Product;
@@ -26,7 +27,7 @@ export default function ProductCard({ product, compact = false }: ProductCardPro
         <Link to={`/product/${product.slug}`} className="relative block overflow-hidden bg-[var(--color-cream)]">
           <div className={`w-full overflow-hidden ${compact ? "aspect-[3/4]" : "aspect-[4/5]"}`}>
             <SmartImage
-              src={product.images[0]}
+              src={imageForDisplay(product.images[0], compact ? 360 : 560)}
               alt={product.name}
               className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />

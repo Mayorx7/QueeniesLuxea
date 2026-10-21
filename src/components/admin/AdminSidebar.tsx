@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
+  Home,
   ShoppingBag,
   Package,
   Users,
@@ -17,6 +18,7 @@ interface AdminSidebarProps {
 }
 
 const NAV_ITEMS = [
+  { label: "Home", to: "/", icon: Home, exact: true },
   { label: "Overview", to: "/admin", icon: LayoutDashboard, exact: true },
   { label: "Orders", to: "/admin/orders", icon: ShoppingBag },
   { label: "Products", to: "/admin/products", icon: Package },
@@ -52,7 +54,7 @@ export default function AdminSidebar({ isOpen, onClose }: AdminSidebarProps) {
           <NavLink to="/">
             <img
               src="/log.png"
-              alt="QueenLuxea"
+              alt="QueeniesLuxea"
               className="h-9 w-auto object-contain brightness-0 invert"
             />
           </NavLink>

@@ -86,7 +86,7 @@ export default function CollectionsPage() {
 
       <div className="mb-16 max-w-2xl">
         <SectionHeading
-          eyebrow="QueensLuxea Collections"
+          eyebrow="QueeniesLuxea Collections"
           title="Curated with Intention"
         />
         <p className="mt-4 text-sm leading-relaxed text-espresso-light">
@@ -146,7 +146,7 @@ export default function CollectionsPage() {
           Be first to see new collections
         </p>
         <p className="mx-auto mt-3 max-w-md text-sm text-espresso-light">
-          Join the QueensLuxea list for early access, curated edits, and invitations to exclusive events.
+          Join the QueeniesLuxea list for early access, curated edits, and invitations to exclusive events.
         </p>
         <Link
           to="/shop"

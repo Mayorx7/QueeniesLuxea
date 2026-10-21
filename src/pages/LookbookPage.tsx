@@ -31,7 +31,7 @@ export default function LookbookPage() {
       <section className="relative flex h-[85vh] min-h-[520px] items-end overflow-hidden bg-ink">
         <SmartImage
           src={img("photo-1490481651871-ab68de25d43d", 1800)}
-          alt="A woman in a silk gown, captured mid-stride for the QueensLuxea Fall lookbook"
+          alt="A woman in a silk gown, captured mid-stride for the QueeniesLuxea Fall lookbook"
           className="absolute inset-0 h-full w-full object-cover opacity-85"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-transparent" />
@@ -115,7 +115,7 @@ export default function LookbookPage() {
       <section className="relative h-[75vh] min-h-[460px] overflow-hidden bg-ink">
         <SmartImage
           src={img("photo-1566174053879-31528523f8ae", 1800)}
-          alt="Wide editorial shot from the QueensLuxea Fall lookbook"
+          alt="Wide editorial shot from the QueeniesLuxea Fall lookbook"
           className="h-full w-full object-cover opacity-85"
         />
         <div className="absolute inset-0 flex items-center justify-center bg-ink/30 px-5 text-center">

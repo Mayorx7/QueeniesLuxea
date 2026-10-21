@@ -79,7 +79,7 @@ export default function AdminOverview() {
             <p className="eyebrow text-gold">Administration</p>
             <h2 className="mt-2 font-display text-2xl text-ink sm:text-3xl">Welcome, {name}</h2>
             <p className="mt-2 max-w-xl text-sm text-espresso-light">
-              Manage the people, orders, and overall performance across QueensLuxea.
+              Manage the people, orders, and overall performance across QueeniesLuxea.
             </p>
           </div>
           <Link

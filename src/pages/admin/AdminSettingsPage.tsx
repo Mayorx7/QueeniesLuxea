@@ -4,9 +4,9 @@ import { Store, Globe, Bell, Users, Plus, Trash2, CheckCircle, Save } from "luci
 interface TeamMember { id: string; name: string; email: string; role: "Admin" | "Editor" | "Viewer"; }
 
 const INITIAL_TEAM: TeamMember[] = [
-  { id: "tm1", name: "Super Admin",    email: "admin@queensluxea.com",    role: "Admin" },
-  { id: "tm2", name: "Grace Hollis",   email: "g.hollis@queensluxea.com", role: "Editor" },
-  { id: "tm3", name: "Louis Bernard",  email: "l.bernard@queensluxea.com",role: "Viewer" },
+  { id: "tm1", name: "Super Admin",    email: "admin@queeniesluxea.com",    role: "Admin" },
+  { id: "tm2", name: "Grace Hollis",   email: "g.hollis@queeniesluxea.com", role: "Editor" },
+  { id: "tm3", name: "Louis Bernard",  email: "l.bernard@queeniesluxea.com",role: "Viewer" },
 ];
 
 const ROLE_BADGE = {
@@ -16,8 +16,8 @@ const ROLE_BADGE = {
 };
 
 export default function AdminSettingsPage() {
-  const [storeName,   setStoreName]  = useState("QueenLuxea");
-  const [storeURL,    setStoreURL]   = useState("queensluxea.com");
+  const [storeName,   setStoreName]  = useState("QueeniesLuxea");
+  const [storeURL,    setStoreURL]   = useState("queeniesluxea.com");
   const [currency,    setCurrency]   = useState("USD");
   const [timezone,    setTimezone]   = useState("Europe/London");
   const [saved,       setSaved]      = useState(false);

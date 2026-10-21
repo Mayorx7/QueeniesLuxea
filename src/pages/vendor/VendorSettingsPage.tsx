@@ -23,7 +23,7 @@ export default function VendorSettingsPage() {
         {/* Profile & Branding */}
         <div className="rounded-xl border border-line bg-ivory p-6">
           <h3 className="font-display text-lg text-ink mb-1">Brand Identity</h3>
-          <p className="text-sm text-espresso-light mb-6">This is how your store appears to customers on QueenLuxea.</p>
+          <p className="text-sm text-espresso-light mb-6">This is how your store appears to customers on QueeniesLuxea.</p>
           
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row gap-6 items-start">

@@ -54,7 +54,7 @@ const SECTIONS: Section[] = [
     body: [
       "Depending on your location, you may have the right to access, correct, delete, or restrict the processing of your personal data.",
       "You may also have the right to object to processing and the right to data portability.",
-      "To exercise any of these rights, please contact us at privacy@queensluxea.com.",
+      "To exercise any of these rights, please contact us at privacy@queeniesluxea.com.",
     ],
   },
   {
@@ -81,7 +81,7 @@ const SECTIONS: Section[] = [
   {
     heading: "Contact",
     body: [
-      "If you have any questions, concerns, or requests relating to this Privacy Policy, please contact us at privacy@queensluxea.com or by writing to QueensLuxea, 14 West 57th Street, New York, NY 10019, United States.",
+      "If you have any questions, concerns, or requests relating to this Privacy Policy, please contact us at privacy@queeniesluxea.com or by writing to QueeniesLuxea, 14 West 57th Street, New York, NY 10019, United States.",
     ],
   },
 ];

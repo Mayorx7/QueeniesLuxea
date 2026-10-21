@@ -19,7 +19,7 @@ export default function MobileSearchBar() {
     <div className="px-4 py-3 md:hidden bg-[var(--color-ivory)]">
       <form onSubmit={handleSubmit} role="search">
         <label htmlFor="mobile-search" className="sr-only">
-          Search QueenLuxea
+          Search QueeniesLuxea
         </label>
         <div className="flex items-center gap-3 rounded-full border border-[var(--color-line)] bg-[var(--color-cream)] px-4 py-2.5 transition-colors focus-within:border-[var(--color-champagne)]">
           <Search

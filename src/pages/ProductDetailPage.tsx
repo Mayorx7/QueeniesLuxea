@@ -222,11 +222,8 @@ export default function ProductDetailPage() {
     );
   }
 
-  // Build the effective color → images map.
-  // Priority 1: explicit DB tags (color_name on each image row).
-  // Priority 2: auto-map by position when image count == color count
-  //             (e.g. 3 images + 3 colors → image[0] = color[0], etc.)
-  // Priority 3: fall back to all images (untagged / single-color product).
+  // Color labels can focus an image, but must never replace the full gallery:
+  // shoppers should always be able to click through every product view.
   const hasExplicitTags = Object.keys(colorImages).length > 0;
   const canAutoMap =
     !hasExplicitTags &&
@@ -241,10 +238,7 @@ export default function ProductDetailPage() {
     });
   }
 
-  const colorImageList =
-    color && effectiveColorImages[color]?.length > 0
-      ? effectiveColorImages[color]
-      : product.images;
+  const selectedColorImage = color ? effectiveColorImages[color]?.[0] : undefined;
 
 
   // Find the exact variant matching the selected color and size
@@ -279,7 +273,11 @@ export default function ProductDetailPage() {
       />
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16">
-        <ImageGallery key={color} images={colorImageList} productName={product.name} />
+        <ImageGallery
+          images={product.images}
+          productName={product.name}
+          initialImage={selectedColorImage}
+        />
 
         <div className="lg:max-w-md">
           <p className="eyebrow text-gold">{product.category}</p>

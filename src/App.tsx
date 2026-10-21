@@ -133,6 +133,7 @@ export default function App() {
                 <Route path="orders" element={<AdminOrdersPage />} />
                 <Route path="orders/:orderId" element={<AdminOrderDetail />} />
                 <Route path="products" element={<AdminProductsPage />} />
+                <Route path="products/:id/edit" element={<VendorAddProductPage />} />
                 <Route path="customers" element={<AdminCustomersPage />} />
                 <Route path="analytics" element={<AdminAnalyticsPage />} />
                 <Route path="settings" element={<AdminSettingsPage />} />
@@ -141,7 +142,7 @@ export default function App() {
               </Route>
 
               {/* Vendor Dashboard Layout */}
-              <Route element={<ProtectedRoute roles={["vendor"]} />}>
+              <Route element={<ProtectedRoute roles={["vendor", "admin"]} />}>
               <Route path="/vendor" element={<VendorDashboardLayout />}>
                 <Route index element={<VendorOverview />} />
                 <Route path="products" element={<VendorProductsPage />} />

@@ -1,4 +1,4 @@
-# QueensLuxea
+# QueeniesLuxea
 
 ## Supabase authentication
 
@@ -6,7 +6,7 @@ The application includes email/password sign-up, email confirmation, password re
 
 1. Create a Supabase project and copy `.env.example` to `.env.local`, filling in the project URL and **publishable/anon** key.
 2. Run [20260911_secure_auth.sql](supabase/migrations/20260911_secure_auth.sql) in the Supabase SQL editor (or apply it with the Supabase CLI).
-3. In Supabase Authentication settings, enable email confirmations and configure a password-strength policy of at least 12 characters. Add your local and production URLs to the Redirect URLs list, including `/auth/callback` and `/reset-password`.
+3. In Supabase Authentication settings, enable email confirmations and configure a password-strength policy of at least 12 characters. Add `https://queeniesluxea.vercel.app/auth/callback` and `https://queeniesluxea.vercel.app/reset-password` to the Redirect URLs list. Set `VITE_APP_URL=https://queeniesluxea.vercel.app` in Vercel so auth emails always return to the public site.
 4. Enable Google and/or Apple only after completing their provider configuration in Supabase. The buttons safely surface provider configuration errors until then.
 
 New accounts are always created as `customer`. Promote a user to `vendor` or `admin` only through a trusted server/admin workflow that uses Supabase's service-role key; do not expose that key to this browser app. The migration intentionally gives browsers no direct permission to change roles.

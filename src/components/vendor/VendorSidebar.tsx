@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
+  Home,
   Package,
   PlusSquare,
   ShoppingBag,
@@ -21,6 +22,7 @@ interface VendorSidebarProps {
 }
 
 const NAV_ITEMS = [
+  { label: "Home", to: "/", icon: Home, exact: true },
   { label: "Dashboard", to: "/vendor", icon: LayoutDashboard, exact: true },
   { label: "Products", to: "/vendor/products", icon: Package },
   { label: "Add Product", to: "/vendor/products/add", icon: PlusSquare },
@@ -57,7 +59,7 @@ export default function VendorSidebar({ isOpen, onClose }: VendorSidebarProps) {
           <NavLink to="/">
             <img
               src="/log.png"
-              alt="QueenLuxea"
+              alt="QueeniesLuxea"
               className="h-9 w-auto object-contain"
             />
           </NavLink>

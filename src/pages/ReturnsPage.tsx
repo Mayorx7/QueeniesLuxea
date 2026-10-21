@@ -1,4 +1,4 @@
-﻿import { RotateCcw, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { RotateCcw, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import Breadcrumbs from "../components/Breadcrumbs";
 import SectionHeading from "../components/SectionHeading";
@@ -7,7 +7,7 @@ const RETURN_STEPS = [
   {
     step: "01",
     title: "Contact Us",
-    body: "Email hello@queensluxea.com within 30 days of receiving your order. Include your order number and reason for return.",
+    body: "Email hello@queeniesluxea.com within 30 days of receiving your order. Include your order number and reason for return.",
   },
   {
     step: "02",

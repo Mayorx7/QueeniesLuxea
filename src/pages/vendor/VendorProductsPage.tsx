@@ -98,7 +98,8 @@ const STATUS_LABEL: Record<DbStatus, string> = {
 export default function VendorProductsPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const isCatalogueManager = profile?.role === "admin";
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -118,15 +119,16 @@ export default function VendorProductsPage() {
     setLoading(true);
     setError(null);
     try {
-      const { data, error: err } = await supabase
+      let query = supabase
         .from("products")
         .select(`
           id, name, category, categories, price, compare_at_price, sale_enabled, sku, status, created_at,
           product_images ( url, display_order ),
           product_variants ( stock )
-        `)
-        .eq("vendor_id", user.id)
-        .order("created_at", { ascending: false });
+        `);
+
+      if (!isCatalogueManager) query = query.eq("vendor_id", user.id);
+      const { data, error: err } = await query.order("created_at", { ascending: false });
 
       if (err) throw err;
 
@@ -143,7 +145,7 @@ export default function VendorProductsPage() {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isCatalogueManager]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
@@ -253,7 +255,7 @@ export default function VendorProductsPage() {
         <div>
           <h2 className="font-display text-2xl text-ink">Products</h2>
           <p className="mt-1 text-sm text-espresso-light">
-            Manage your store's inventory and listings.
+            {isCatalogueManager ? "Manage every vendor's inventory and listings." : "Manage your store's inventory and listings."}
           </p>
         </div>
         <Link

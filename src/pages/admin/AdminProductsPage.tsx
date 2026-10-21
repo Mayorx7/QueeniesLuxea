@@ -3,6 +3,8 @@ import { Plus, Search, Pencil, Trash2, Tag, Eye, RefreshCw, AlertTriangle } from
 import { Link } from "react-router-dom";
 import { supabase } from "../../lib/supabase";
 import { formatPrice } from "../../utils/format";
+import { PRODUCTS } from "../../data/products";
+import { useAuth } from "../../context/AuthContext";
 
 interface AdminProduct {
   id: string;
@@ -30,11 +32,13 @@ const STATUS_LABEL: Record<AdminProduct["status"], string> = {
 
 
 export default function AdminProductsPage() {
+  const { user } = useAuth();
   const [products, setProducts] = useState<AdminProduct[]>([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState<string | null>(null);
   const [search, setSearch]     = useState("");
   const [cat, setCat]           = useState("All");
+  const [importingStatic, setImportingStatic] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     if (!supabase) return;
@@ -98,6 +102,60 @@ export default function AdminProductsPage() {
     setProducts((ps) => ps.filter((p) => p.id !== id));
   };
 
+  // The bundled sample catalogue has no database records to secure or edit.
+  // Importing it once converts every sample into an ordinary, managed product.
+  const importStaticCatalogue = async () => {
+    if (!supabase || !user || importingStatic) return;
+    if (!window.confirm("Import the static sample catalogue? It will become live, editable products owned by your admin account.")) return;
+    setImportingStatic(true);
+    setError(null);
+    try {
+      for (const product of PRODUCTS) {
+        const { data, error: productError } = await supabase
+          .from("products")
+          .insert({
+            vendor_id: user.id,
+            name: product.name,
+            slug: product.slug,
+            description: product.description,
+            category: product.category,
+            categories: product.categories ?? [product.category],
+            price: product.price,
+            compare_at_price: product.compareAtPrice ?? null,
+            sale_enabled: Boolean(product.compareAtPrice),
+            tags: product.tags,
+            sizes: product.sizes,
+            colors: product.colors.map((name) => ({ id: name.toLowerCase().replace(/\s+/g, "-"), name, hex: name })),
+            sku: product.sku ?? `STATIC-${product.id.toUpperCase()}`,
+            status: "published",
+            is_featured: product.isFeatured,
+          })
+          .select("id")
+          .single();
+        if (productError) throw productError;
+
+        const productId = (data as { id: string }).id;
+        const { error: imagesError } = await supabase.from("product_images").insert(
+          product.images.map((url, display_order) => ({ product_id: productId, url, display_order }))
+        );
+        if (imagesError) throw imagesError;
+
+        const { error: variantsError } = await supabase.from("product_variants").insert({
+          product_id: productId,
+          label: "Default",
+          stock: product.inStock ? 10 : 0,
+          low_stock_threshold: 3,
+        });
+        if (variantsError) throw variantsError;
+      }
+      await fetchProducts();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Could not import the static catalogue.");
+    } finally {
+      setImportingStatic(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Error banner */}
@@ -122,10 +180,15 @@ export default function AdminProductsPage() {
             className="w-full rounded-xl border border-line bg-ivory pl-9 pr-4 py-2.5 text-sm text-ink outline-none placeholder-espresso-light/60 focus:border-champagne"
           />
         </div>
-        <button className="inline-flex items-center gap-2 rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-ivory transition-all hover:bg-espresso hover:scale-[1.02] shrink-0">
+        <Link to="/vendor/products/add" className="inline-flex items-center gap-2 rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-ivory transition-all hover:bg-espresso hover:scale-[1.02] shrink-0">
           <Plus size={15} />
           Add Product
-        </button>
+        </Link>
+        {products.length === 0 && !loading && (
+          <button onClick={importStaticCatalogue} disabled={importingStatic} className="inline-flex items-center gap-2 rounded-xl border border-line bg-ivory px-5 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-cream disabled:opacity-60 shrink-0">
+            {importingStatic ? "Importing static products…" : "Import static products"}
+          </button>
+        )}
       </div>
 
       {/* Category tabs */}
@@ -228,9 +291,9 @@ export default function AdminProductsPage() {
                         >
                           <Eye size={15} />
                         </Link>
-                        <button className="rounded-lg p-1.5 text-espresso-light hover:bg-cream hover:text-ink transition-colors" aria-label="Edit">
+                        <Link to={`/admin/products/${p.id}/edit`} className="rounded-lg p-1.5 text-espresso-light hover:bg-cream hover:text-ink transition-colors" aria-label={`Edit ${p.name}`}>
                           <Pencil size={15} />
-                        </button>
+                        </Link>
                         <button
                           onClick={() => remove(p.id)}
                           className="rounded-lg p-1.5 text-espresso-light hover:bg-red-50 hover:text-red-600 transition-colors"

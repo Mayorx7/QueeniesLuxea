@@ -1,4 +1,4 @@
-﻿import Breadcrumbs from "../components/Breadcrumbs";
+import Breadcrumbs from "../components/Breadcrumbs";
 import SectionHeading from "../components/SectionHeading";
 import Accordion from "../components/Accordion";
 
@@ -25,7 +25,7 @@ export default function CookiePolicyPage() {
 
       <div className="mb-10 text-sm leading-relaxed text-espresso-light">
         <p>
-          This Cookie Policy explains how QueensLuxea ("we", "us", "our") uses cookies and similar
+          This Cookie Policy explains how QueeniesLuxea ("we", "us", "our") uses cookies and similar
           tracking technologies when you visit our website. By using our site, you consent to the use
           of cookies as described in this policy.
         </p>
@@ -113,8 +113,8 @@ export default function CookiePolicyPage() {
           For more information about how we handle your personal data, please review our{" "}
           <a href="/privacy" className="link-underline text-espresso hover:text-gold">Privacy Policy</a>.
           Questions about this Cookie Policy may be directed to{" "}
-          <a href="mailto:privacy@queensluxea.com" className="link-underline text-espresso hover:text-gold">
-            privacy@queensluxea.com
+          <a href="mailto:privacy@queeniesluxea.com" className="link-underline text-espresso hover:text-gold">
+            privacy@queeniesluxea.com
           </a>.
         </p>
       </div>

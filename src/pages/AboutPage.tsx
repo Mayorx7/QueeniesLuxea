@@ -8,7 +8,7 @@ export default function AboutPage() {
       <section className="relative flex h-[60vh] min-h-[380px] items-end overflow-hidden bg-ink">
         <SmartImage
           src={img("photo-1470309864661-68328b2cd0a5", 1800)}
-          alt="Portrait study for the QueensLuxea about page"
+          alt="Portrait study for the QueeniesLuxea about page"
           className="absolute inset-0 h-full w-full object-cover opacity-80"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-transparent" />
@@ -61,7 +61,7 @@ export default function AboutPage() {
         <div className="aspect-[4/3] overflow-hidden bg-ink lg:aspect-auto">
           <SmartImage
             src={img("photo-1584917865442-de89df76afd3", 1200)}
-            alt="A QueensLuxea handbag resting on a studio surface"
+            alt="A QueeniesLuxea handbag resting on a studio surface"
             className="h-full w-full object-cover"
           />
         </div>

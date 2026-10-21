@@ -55,7 +55,7 @@ export default function SearchOverlay({ open, onClose }: SearchOverlayProps) {
         </button>
         <form onSubmit={handleSubmit} role="search">
           <label htmlFor="site-search" className="eyebrow mb-3 block text-gold">
-            Search QueensLuxea
+            Search QueeniesLuxea
           </label>
           <div className="flex items-center gap-3 border-b border-espresso/30 pb-3">
             <Search size={18} className="text-espresso-light" aria-hidden="true" />
